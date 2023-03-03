@@ -104,9 +104,12 @@ I have not tested if this is feasible, but I have tested that you can finetune f
 
 After preparing your dataset and configuration file, you are ready to train. Simply select a generated configuration file, click train, then keep an eye on either the console window to the right for output, or console output in your terminal/command prompt.
 
-If you check `Verbose Console Output`, *all* output from the training process gets forwarded to the console window on the right. This output is buffered, up to the `Console Buffer Size` specified (for example, the last eight lines if 8).
+If you check `Verbose Console Output`, *all* output from the training process gets forwarded to the console window on the right until training starts. This output is buffered, up to the `Console Buffer Size` specified (for example, the last eight lines if 8).
 
 If you bump up the `Keep X Previous States` above 0, it will keep the last X number of saved models and training states, and clean up the rest on training start, and every save. **!**NOTE**!** I did not extensively test this, only on test data, and it did not nuke my saves. I don't expect it to happen, but be wary.
+
+**!**Linux only**!**: If you're looking to use multiple GPUs, set how many GPUs you have in the `GPUs` field, and it will leverage distrubted training.
+* **!**NOTE**!**: this is experimental. It seems to train so far, and both my 6800XTs have a load on them, but I'm not too sure of the exact specifics.
 
 If everything is done right, you'll see a progress bar and some helpful metrics. Below that, is a graph of the total GPT loss rate. 
 
