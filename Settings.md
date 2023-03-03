@@ -15,6 +15,8 @@ Below are settings that override the default launch arguments. Some of these req
 * `Voice Fixer`: runs each generated audio clip through `voicefixer`, if available and installed.
 * `Use CUDA for Voice Fixer`: allows voicefixer to use CUDA. Speeds up cleaning the output, but at the cost of more VRAM consumed. Disable if you OOM.
 * `Do Not Load TTS On Startup`: skips loading TorToiSe on initialization, but will get loaded when anything that requires it needs it. This is useful if you're doing non-TTS functions that require VRAM, but you'll OOM while doing it when the model is loaded (for example, training).
+* `Delete Non-Final Output`: if enabled and using multi-line generation, it will delete the individual pieces after combining. If enabled and using Voicefixer, it will remove the un-fixed file. Useful for reducing clutter.
+* `Use BigVGAN Vocoder`: uses [NVIDIA/BigVGAN](https://github.com/NVIDIA/BigVGAN) as the vocoder instead of the default one. Offers a slight improvement when generating the waveform.
 * `Device Override`: overrides the device name used to pass to PyTorch for hardware acceleration. You can use the accompanied `list_devices.py` script to map valid strings to GPU names. You can also pass `cpu` if you want to fallback to software mode.
 
 * `Sample Batch Size`: sets the batch size when generating autoregressive samples. Bigger batches result in faster compute, at the cost of increased VRAM consumption. Leave to 0 to calculate a "best" fit.
