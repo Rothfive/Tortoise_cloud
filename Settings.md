@@ -21,7 +21,7 @@ Below are settings that override the default launch arguments. Some of these req
 
 * `Sample Batch Size`: sets the batch size when generating autoregressive samples. Bigger batches result in faster compute, at the cost of increased VRAM consumption. Leave to 0 to calculate a "best" fit.
 * `Gradio Concurrency Count`: how many Gradio events the queue can process at once. Leave this over 1 if you want to modify settings in the UI that updates other settings while generating audio clips.
-* `Output Sample Rate`: the sample rate to save the generated audio as. It provides a bit of slight bump in quality
+* `Auto-Calculate Voice Chunk Duration (in seconds)`: for automatically suggesting a voice chunk size, this value will divide the total duration of a voice's input samples. For example, 100 seconds worth of audio with this value as 10 will give 10 chunks. This is to make people stop shitting their pants when they OOM from not adjusting the `Voice Chunk` slider.
 * `Output Volume`: adjusts the volume through amplitude scaling.
 * `Autoregressive Model`: the autoregressive model to use for generating audio output. This will look for models under `./models/finetunes/` and `./training/{voice}-finetune/models/`.
 * `Whisper Model`: the specific model to use for Whisper transcription, when preparing a dataset to finetune with.
