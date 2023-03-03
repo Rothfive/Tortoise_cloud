@@ -5,7 +5,6 @@
 If you're easily overwhelmed with the below section, fear not, as it's very simple. Just:
 * input your text
 * select your voice
-* increase the `Voice Chunks` slider as needed
 * click `Ultra Fast`
 * click `Generate`
 
@@ -21,6 +20,7 @@ You'll be presented with a bunch of options in the default `Generate` tab, but d
 * `Voice`: the voice you want to clone. You can select `microphone` if you want to use input from your microphone. You can also use `random` for it to use a randomly generated voice.
 * `Microphone Source`: Use your own voice from a line-in source.
 * `Voice Chunks`: a slider to determine how many pieces to process your voice dataset when computing conditional latents. The lower the number, the bigger the pieces and the more VRAM is needed. The smaller the pieces, the less VRAM is needed, but the more likely you will slice mid-phoneme. Playing around with this will most definitely affect the output of your cloning, as some datasets will work better with different values.
+	- a "safe" value will be automatically calculated based on the total duration of your voice input samples, to avoid blindly OOMing. You can adjust this factor in `Settings`.
 * `Refresh Voice List`: updates the voice list
 * `(Re)Compute Voice Latents`: (re)computes the conditional latents for a given voice.
 
