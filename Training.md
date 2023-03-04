@@ -56,7 +56,7 @@ Transcription is not perfect, however. Be sure to manually quality check the out
 
 ## Generate Configuration
 
-This will generate the YAML necessary to feed into training. Here, you can set some parameters on how training will be done:
+This will generate the YAML necessary to feed into training. For documentation's sake, below are details for what each parameter does:
 * `Epochs`: how many times you want training to loop through your data. This *should* be dependent on your dataset size, as I've had decent results with 500 epochs for a dataset size of about 60.
 * `Learning Rate`: rate that determines how fast a model will "learn". Higher values train faster, but at the risk of frying the model, overfitting, or other problems. The default is "sane" enough for safety, especially in the scope of retraining, but definitely needs some adjustments. If you want faster training, bump this up to `0.0001` (1e-5), but be wary you may fry your finetune without tighter scheduling.
 * `Text_CE LR Weight`: an experimental setting to govern how much weight to factor in with the provided learning rate. This is ***a highly experimental tunable***, and is only exposed so I don't need to edit it myself when testing it. ***Leave this to the default 0.01 unless you know what you are doing.***
@@ -77,6 +77,29 @@ and, some buttons:
 * `Save Training Configuration`: writes the settings to the training YAML, for loading with the training script.
 
 After filling in the values, click `Save Training Configuration`, and it should print a message when it's done.
+
+### Suggested Settings
+
+**!**NOTE**!**: some of my findings are based around training in a multi-GPU environment. I'll need to validate that some of these hold true in a single GPU training environment.
+
+Getting decent training results is quite the pickle, and it seems my nuggets of wisdom are getting spread over the wiki, so here, I'll (try to) detail my findings with training, now that I'm able to actually test various settings with ease.
+* your target epoch count has no bearing on how something is trained, as it's just a number telling the trainer how long to train
+	- In other words, there's no (perceptable) difference between training for 25 epochs, then 25 epochs, over training for just 50 epochs.
+* (assumption) leave the learning rate where it's at, as training with BitsAndBytes or half-precision will yield worse results the higher the learning rate is.
+	- Don't try and be clever and doing what I do with Textual Inversions by training at a high learning rate briefly, then dropping it down to save some epochs worth of training; you'll definitely fry the model.
+* Text CE LR Ratio most definitely should not be touched.
+	- I'm under the impression that it actually wants a high loss ratio to not overfit.
+* As for a learning rate schedule, I *feel* like very large datasets require tighter scheduling, but the suggested schedule was for a dataset of around either 4k or 7k files, so it should be fine regardless.
+* Your batch size and mega batch factor greatly determine how much VRAM gets consumed. It is a bit tough to nail right, yet easy to fail and get un-optimal training (desu, it should be ratio instead of factor).
+	- With a dataset size of 5304, a ratio of 80:1 consumes about the same VRAM as a ratio of 128:2, and 512:8, and 1024:16.
+    - The pacing of the training also seems similar for an equivalent ratio. On 2x6800XTs, it takes about 480 seconds to parse one epoch for a dataset size of 5304 (assuming my bottleneck is raw calculations, rather than VRAM speed).
+    - However, the bigger your mega batch factor, the "slower" the pacing of your training gets. I've had an astronomically high batch size and mega batch factor in one training test, and my initial loss was 4.X, while reducing it to sensible numbers had my initial loss at 2.X.
+    - ***DO NOT*** think you can be clever by setting astronomical batch sizes and mega batch factors thinking you're getting a good deal on throughput. I imagine the reality of setting very high mega batch factors comes from effectively stretching how much training you actually need, defeating the purpose of large batch sizes.
+- The smaller your print and save frequencies, the more time training will pause to return metrics and dump to disk. I don't think printing very often will harm *too* much, but it pleases my autism to have a tight resolution for my training losses. Naturally, saving often also means more checkpoints on disk.
+- I haven't thoroughly tested half-precision training, as using it was the means of reducing VRAM consumption before BitsAndBytes was integrated.
+	+ in theory, this should be mutually exclusive with BitsAndBytes, as in, you can only enable one or the other.
+- If your system says BitsAndBytes is active, you ***should*** use it. At low learning rates, the drawbacks of possible precision errors isn't exacerbated.
+        
 
 ### Resuming Training
 
