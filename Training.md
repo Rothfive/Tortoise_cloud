@@ -85,6 +85,7 @@ You can easily resume from a previous training state within the web UI as well.
 * click `Import Dataset`
 * it'll pull up the last used settings and grab the last saved state to resume from
 	- feel free to adjust any other settings, like increasing the epoch count
+    	+ **!**NOTE**!**: ensure the batch sizes match, as things will get botched if you don't
 	- **!**NOTE**!**: sometimes-but-not-all-the-time, the numbers might be a bit mismatched, due to some rounding errors when converting back from iterations as a unit to epochs as a unit
 * click `Save Training Setting`
 	- you're free to revalidate your settings, but it shouldn't be necessary if you changed nothing
