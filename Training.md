@@ -68,6 +68,7 @@ This will generate the YAML necessary to feed into training. For documentation's
 * `Resume State Path`: the last training state saved to resume from. The general path structure is what the placeholder value is. This will resume from whatever iterations it was last at, and iterate from there until the target step count (for example, resuming from iteration 2500, while requesting 5000 iterations, will iterate 2500 more times).
 * `Half-Precision`: setting this will convert the base model to float16 and train at half precision. This *might* be faster, but quality during generation *might* be hindered. I've trained against a small dataset (size 17) of Solid Snake for 3000 epochs, and it *works*, but you *must* enable Half-Precision for generation when using half-precision models. On CUDA systems, this is irrelevant, as everything is secretly trained using integer8 with bitsandbyte's optimizations.
 * `BitsAndBytes`: specifies if you want to train with BitsAndBytes optimizations enabled. Enabling this makes the above setting redundant. You ***should*** really leave this enabled unless you absolutely are sure of what you're doing, as this is crucial to reduce VRAM usage.
+* `Worker Processes`: tells the training script how many worker processes to spawn. I don't think more workers help training, as they just consume a lot more system RAM, especially when you're using multiple GPUs to train. 2 is sensible, so leave it there.
 * `Source Model`: the source model to finetune against. With it, you can re-finetune already finetuned models (for example, taking a Japanese finetune that can speak Japanese well, but you want to refine it for a specific voice). You *should* leave this as the default autoregressive model unless you are sure of what you're doing. 
 * `Dataset`: a dataset generated from the `Prepare Dataset` tab.
 and, some buttons:
@@ -130,7 +131,16 @@ If you check `Verbose Console Output`, *all* output from the training process ge
 
 If you bump up the `Keep X Previous States` above 0, it will keep the last X number of saved models and training states, and clean up the rest on training start, and every save.
 
-If everything is done right, you'll see a progress bar and some helpful metrics. Below that, is a graph of the loss rates.
+If everything is done right, you'll see a progress bar and some helpful metrics. Below that, is a graph of the loss rates:
+* `current epoch / total epochs`: how far along you are in terms of epochs
+* `current iteration / total iterations`: how far along you are in terms of iterations
+* `current batch / total batches`: how far along you are within an epoch
+* `epoch throughput rate`: the time it took to process the last epoch
+* `iteration throughput rate`: the time it took to process the last iteration
+* `ETA`: estimated time to completion; will use the epoch throughput rate to estimate
+* `Loss`: the last reported loss value
+* `Next milestone in:` reports the next "milestone" for training, and how many more iterations left to reach it.
+	- **!**NOTE**!**: this is pretty inaccurate, as it uses the "instantaneous" rate of change
 
 After every `print rate` iterations, the loss rate will update and get reported back to you. This will update the graph below with the current loss rate. This is useful to see how "ready" your model/finetune is. However, there doesn't seem to be a "one-size-fits-all" value for what loss rate you should aim at. I've had some finetunes benefit a ton more from sub 0.01 loss rates, while others absolutely fried after 0.5 (although, it entirely depends on how low of a learning rate you have, rather than haphazardly quick-training it).
 
