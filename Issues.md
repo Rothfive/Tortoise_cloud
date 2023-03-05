@@ -2,6 +2,12 @@
 
 I'll try and make a list of "common" (or what I feel may be common that I experience) issues with getting TorToiSe set up:
 
+### "I can't use the Web UI when it shows an error"
+
+For god knows why, the Gradio web UI will prevent clicking on anything if it's listening outside of `127.0.0.1`.
+
+You must click the (X) icon next to the error message to dismiss it before using the web UI again.
+
 ### `No hardware acceleration is available, falling back to CPU...`
 
 Be sure you have used the right script for setup:
@@ -92,6 +98,10 @@ This occurs when you:
 * DLAS will attempt to backup and move the old folder, but because of a zombie Python process still having "ownership" of the folder, the folder cannot be removed
 
 Open a command prompt and type `tskill python` to kill all Python processes. Relaunch the web UI, and try to train again.
+
+### `local_state[k] = v[grad_accum_step] / IndexError: list index out of range`
+
+Your `Gradiant Accumulation Size` is too large for your given `Batch Size`. Please reduce it to, at most, half your batch size, or use the validation button to correct this.
 
 ## Reporting Other Errors
 
