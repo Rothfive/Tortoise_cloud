@@ -26,6 +26,6 @@ There's no hard specifics on how many, or how long, your sources should be.
 If you're looking to trim your clips, in my opinion, ~~Audacity~~ Tenacity works good enough. Power users with FFMPEG already installed can simply used the provided conversion script in `.\tortoise\convert\`.
 
 After preparing your clips as WAVs, you can now add in your new voice source:
-* open up the `voices` folder
+* open up the `.\ai-voice-cloning\voices\` folder
 * create a new folder in whatever name you want
 * dump your clips into that folder
