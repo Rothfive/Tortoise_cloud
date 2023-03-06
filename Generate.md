@@ -57,3 +57,39 @@ After you fill everything out, click `Run`, and wait for your output in the outp
 All outputs are saved under `./result/[voice name]/`. On some browsers, you're able to directly download the file with the three-dot menu in the HTML5 audio element.
 
 To save you from headaches, I strongly recommend playing around with shorter sentences first to find the right values for the voice you're using before generating longer sentences.
+
+### Prompt Setting Editing
+
+If you want to procedurally edit any generation settings (for example, switch between voices), you can add to the start of the line a JSON string containing the settings you want to override. For example:
+```
+{"voice": "james"} Is that really you, Mary?
+{"voice": "maria", "autoregressive_model": "auto" } The name is Maria.
+```
+will load the `james` voice using the currently loaded model for the first line, while the second line will load the `maria` voice and attempt to search for a valid model (will check for `./models/finetunes/{voice}.pth` first, then the latest model in `./training/{voice}-finetune/models/#_gpt.pth`).
+
+#### Available Settings
+
+You can always refer to a list of valid settings under [`./src/utils.py:155`](https://git.ecker.tech/mrq/ai-voice-cloning/src/branch/master/src/utils.py#L155), but for ease of access:
+* `temperature`
+* `top_p`
+* `diffusion_temperature`
+* `length_penalty`
+* `repetition_penalty`
+* `cond_free_k`
+* `num_autoregressive_samples`
+* `sample_batch_size`
+* `diffusion_iterations`
+* `voice_samples`
+* `conditioning_latents`
+* `use_deterministic_seed`
+* `return_deterministic_state`
+* `k`
+* `diffusion_sampler`
+* `breathing_room`
+* `progress`
+* `half_p`
+* `cond_free`
+* `cvvp_amount`
+* `autoregressive_model`
+
+You can set `autoregressive_model` to `auto` alongside a `voice` to automatically deduce a model for a given voice.
