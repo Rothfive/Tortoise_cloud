@@ -25,8 +25,11 @@ Below are settings that override the default launch arguments. Some of these req
 * `Autoregressive Model`: the autoregressive model to use for generating audio output. This will look for models under `./models/finetunes/` and `./training/{voice}-finetune/models/`.
 	- select "auto" to automatically select one based on the current voice loaded.
 * `Vocoder Model`: selects which vocoder to use. Univnet is the default vocoder, while BigVGAN is a better one.
+* `Whisper Backend`: selects which whisper backend to use when transcribing.
+	- `whisper`: the default whisper implementation
+	- `whispercpp`: leverages [lightmare/whispercpp.py](https://git.ecker.tech/lightmare/whispercpp.py) for transcription and trimming.
+    - `whisperx`: leverages m-bain/whisperX for transcription.
 * `Whisper Model`: the specific model to use for Whisper transcription, when preparing a dataset to finetune with.
-* `Use Whisper.cpp`: leverages [lightmare/whispercpp.py](https://git.ecker.tech/lightmare/whispercpp.py) for transcription and trimming. **!**NOTE**!** this is highly experimental, and I haven't actually tested this myself. There's some caveats.
 * `Refresh Model List`: updates the above dropdown with models
 * `Check for Updates`: manually checks for an update for this rep.
 * `(Re)Load TTS`: either initializes or reinitializes TorToiSe. You should not need to use this unless you change some settings, like Low VRAM.
