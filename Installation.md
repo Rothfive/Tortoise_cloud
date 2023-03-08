@@ -1,10 +1,4 @@
-## Colab Notebook
-
-A colab-ready notebook to quickly set up and use this repo is included and available [here](https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook.ipynb): https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook.ipynb
-
-Simply go [here](https://colab.research.google.com/) and upload the file.
-
-For the unfortunate using Paperspace, this notebook should also work for it.
+This software has been tested both locally on Windows and Linux, as well as Jupyter instances.
 
 ## Installing
 
@@ -90,12 +84,35 @@ Additionally, training on AMD cards cannot leverage BitsAndBytes optimizations, 
 
 To check for updates, simply run `update.bat` (or `update.sh`). It should pull from the repo, as well as fetch for any new dependencies.
 
-### Migrating from [mrq/tortoise-tts](https://git.ecker.tech/mrq/tortoise-tts)
+## Notebooks
 
-If you're migrating from [mrq/tortoise-tts](https://git.ecker.tech/mrq/tortoise-tts), you can simply clone this repo, then move the following folders:
-* `./config/`
-* `./results/`
-* `./voices/`
-* `./models/`
+The repo provides a notebooks to run the software on an instance rather than local hardware.
 
-then run the setup script.
+### Colab
+[Notebook](https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_colab.ipynb): https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_colab.ipynb
+
+For colab use, simply:
+* download the above notebook
+* navigate to [Colab](https://colab.research.google.com/)
+* upload the notebook
+* run the Installation block
+* run the Drive Mount block
+* run EITHER the "Run (Inlined)" or "Run (Non-inlined)"
+* add in your voices through Google Drive (if mounted) or upload them on the sidebar on the left
+
+### Paperspace
+[Notebook](https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_paperspace.ipynb): https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_paperspace.ipynb
+
+For paperspace use, simply:
+* download the above notebook
+* navigate to [Paperspace](https://www.paperspace.com/)
+* create either a new account or login to an existing one
+* create a new Gradient project
+* create a notebook
+* click start from scratch
+* select your machine (this can be changed later on)
+* select `6 hours` for auto-shutdown time (this can be changed later)
+* click start notebook
+* upload the notebook file
+* run the Installation block
+* run the Running block
