@@ -100,6 +100,12 @@ For colab use, simply:
 * run EITHER the "Run (Inlined)" or "Run (Non-inlined)"
 * add in your voices through Google Drive (if mounted) or upload them on the sidebar on the left
 
+#### Caveats
+
+Colab has some inconsistent problems, from restricting constant use, to randomly crashing sometimes and disconnect from the runtime, to having to gamble which GPU you do get, to constantly needing to re-initialize the entire software, to being gimped by your Drive space (if seeking persistent storage).
+
+But it's free.
+
 ### Paperspace
 [Notebook](https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_paperspace.ipynb): https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_paperspace.ipynb
 
@@ -116,3 +122,14 @@ For paperspace use, simply:
 * upload the notebook file
 * run the Installation block
 * run the Running block
+
+#### Caveats
+
+Paperspace has some glaring problems that have really, really soured me from using it.
+* requires a phone number to create an account (some online SMS burners work, at least).
+* it's a different kind of gamble when trying to nab up a "free" (unmetered) GPU. While it's nice to know what you're getting, it's still throwing it to chance on whether you can nab a decent GPU (if using the paid tiers)
+* if you lose connection for a moment, or refresh the page, you lose console output from the web UI. You'll have to restart the kernel (runtime) before interacting with the notebook.
+* I've had my account deactivated because it "detected" `ngrok` running when I was simply using Voldy's Web UI (which uses gradio). No warning was issued, just login issues, until I contacted support with a "you get this one warning, if it happens again your account is gone", and I had to reinitialize everything after that, as if my account was completely wiped.
+* Then, after reverting to the free tier after not needing the growth plan anymore, it kept trying to charge my card (thankfully I had it as a virtual card, so it couldn't charge me), and it kept persisting until I got a "final warning" email. I logged in a few weeks or months after that to download my files, and the next day my account was trapped in limbo.
+
+Paperspace is one of those "too good to be true" deals. While being able to use an A4000 for what amounts to $8 a month, or a A100-80G for what amounts to $40 a month, the problems that come with it, in my experinece, are definitely not worth easy compute. I definitely will not spend any more money on it out of principle of being fucked over before.
