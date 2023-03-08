@@ -52,6 +52,8 @@ Transcription is not perfect, however. Be sure to manually quality check the out
 * small kana like the `っ` of `あたしって` gets coerced as the normal kana.
 * some punctuation like `、` may prematurely terminate a sentence.
 
+You can also designate a portion of your dataset as validation instead of training. Simply enter a value in the `Validation Text Length Cull Size` field, click `Prepare Validation Dataset`, and any transcribed text length under this value will be culled from the main training dataset and allocated to the validation dataset. This not only has the benefit of removing data that's too small to really train for, but also provides an easy way to provide data to validate against that exists outside of the training dataset.
+
 ## Generate Configuration
 
 This will generate the YAML necessary to feed into training. For documentation's sake, below are details for what each parameter does:
@@ -63,6 +65,7 @@ This will generate the YAML necessary to feed into training. For documentation's
 * `Gradient Accumulation Size` (*originally named `mega batch factor`*): At first seemed very confusing, but it's very simple. This will further divide batches into mini-batches, parse them in sequence, but only updates the model after completing all mini-batches. This effectively saves more VRAM by de-facto running at a smaller batch size, but without constantly updating the model, as if running at a larger batch size. This does have some quirks, like crashing when saving at a specific batch size:gradient accumulation ratio, odd pacing of training, etc.
 * `Print Frequency`: how often the trainer should print its training statistics in epochs. Printing takes a little bit of time, but it's a nice way to gauge how a finetune is baking, as it lists your losses and other statistics. This is purely for debugging and babysitting if a model is being trained adequately. The web UI *should* parse the information from stdout and grab the total loss and report it back.
 * `Save Frequency`: how often to save a copy of the model during training in epochs. It seems the training will save a normal copy, an `ema` version of the model, *AND* a backup archive containing both to resume from. If you're training on a Colab with your Drive mounted, these can easily rack up and eat your allotted space. You *can* delete older copies from training, but it's wise not to in case you want to resume from an older state.
+* `Validation Frequency`: if a validation dataset is provided, this governs how frequent the training process will validate against that extra dataset. On completion, it will spit out the losses when and show up in the loss graph.
 * `Resume State Path`: the last training state saved to resume from. The general path structure is what the placeholder value is. This will resume from whatever iterations it was last at, and iterate from there until the target step count (for example, resuming from iteration 2500, while requesting 5000 iterations, will iterate 2500 more times).
 * `Half-Precision`: setting this will convert the base model to float16 and train at half precision. This *might* be faster, but quality during generation *might* be hindered. I've trained against a small dataset (size 17) of Solid Snake for 3000 epochs, and it *works*, but you *must* enable Half-Precision for generation when using half-precision models. On CUDA systems, this is irrelevant, as everything is secretly trained using integer8 with bitsandbyte's optimizations.
 * `BitsAndBytes`: specifies if you want to train with BitsAndBytes optimizations enabled. Enabling this makes the above setting redundant. You ***should*** really leave this enabled unless you absolutely are sure of what you're doing, as this is crucial to reduce VRAM usage.
@@ -150,6 +153,14 @@ If something goes wrong, please consult the output, as, more than likely, you've
 After you're done, the process will close itself, and you are now free to use the newly baked model.
 
 You can then head on over to the `Settings` tab, reload the model listings, and select your newly trained model in the `Autoregressive Model` dropdown.
+
+### Training Validation
+
+In addition, the training script also allows for validating your model against a separate dataset, to see how well it performs when using data it's not trained on.
+
+However, these metrics are not re-incorporated into the training, as that's not what the validation dataset is for.
+
+I have yet to fully train a model with validation enabled to see how well it fares, but it should offer a better glimpse of how the model will perform from outside data, rather than recreating its training data.
 
 ### Multi-GPU Training
 
