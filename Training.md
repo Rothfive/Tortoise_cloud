@@ -164,9 +164,17 @@ I have yet to fully train a model with validation enabled to see how well it far
 
 ### Multi-GPU Training
 
-**!**NOTE**!**: This is Linux only, only because I don't have a way to test it on Windows, or the care to have the batch script match the shell script.
+**!**NOTE**!**: This is Linux only, simply because I do not have a way to test it on Windows, nor the care to port the shell script to the batch script. This is left as an exercise to the Windows user.
 
-If you have multiple GPUs, you can easily leverage them by simply specifying how many GPUs you have in the `Run Training` tab. With it, it'll divide out the workload by splitting the batches to work on among the pool (at least, my understanding).
+If you have multiple GPUs, you can easily leverage them by simply specifying how many GPUs you have in the `Run Training` tab. With it, it'll divide out the workload by splitting the batches to work on among the pool (at least, my understanding). Your training configuration will also be modified to better suit multi-GPU training (namely, using the `adamw_zero` optimizer over the `adamw` one, per the comment suggesting to use it for distributed training).
+
+However, training large datasets (several thousand+ lines) seems to introduce some instability (at least with ROCm backends). I've had so, so, so, ***so*** many headaches over the course of a week trying to train a large data:
+* initially, I was able to leverage insane batch sizes with proportionally insane gradient accumulation sizes (I think something like bs=1024, ga=16) for a day, and recreating configurations with those values will bring about instability (after one epoch it'll crash Xorg and I can never catch if it's from a system OOM)
+* worker processes count need to be reduced, as it spawns more processes for each GPU, leading to more system RAM pressure
+* using a rather liberal validation dataset size will cause the GPUs to time out, and the watchdog won't catch this until 30 minutes later with the default timeout
+* I believe a finished GPU will block until the other GPU finishes its data, even with GPUs at near-parity, it allegedly offers some delay (efficacy of a rememdy to this is still being tested)
+
+Smaller workloads seem to not have these egregious issues (a few hundred lines), at least in my recent memory.
 
 ### Training Output
 
