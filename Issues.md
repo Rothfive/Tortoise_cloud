@@ -1,3 +1,17 @@
+## Reporting Other Errors
+
+I do not have all possible errors documented, so if you encounter one that you can't resolve, please open an Issue with adequate information, including:
+* python version
+* GPU
+* stack trace (or full console output preferred), wrapped in \`\`\`\[trace\]\`\`\` 
+* summary of what you were doing
+
+and I'll try my best to remedy it, even if it's something small like not reading the documentation.
+
+***Please, please, please*** provide either a full stack trace of the error (if running the web UI) or the command prompt output (if running a script). I will not know what's wrong if you only provide the error message itself, as errors are heavily predicated on the full state it happened. Without it, I cannot help you, as I would only be able to make assumptions.
+
+If this is an issue related to a model being trained, ***please, please, please*** include information about your training parameters and the graphs. I cannot easily offer ***any*** insight if I do not know what I'm diagnosing.
+
 ## Pitfalls You May Encounter
 
 I'll try and make a list of "common" (or what I feel may be common that I experience) issues with getting TorToiSe set up:
@@ -34,9 +48,7 @@ Lately, it seems it just takes way too long to download Voicefixer's models. Jus
 
 ### `torch.cuda.OutOfMemoryError: CUDA out of memory.`
 
-#### Generation
-
-You most likely have a GPU with low VRAM (~4GiB), and the small optimizations with keeping data on the GPU is enough to OOM. Please check the `Low VRAM` option under the `Settings` tab.
+For generating: you most likely have a GPU with low VRAM (~4GiB), and the small optimizations with keeping data on the GPU is enough to OOM. Please check the `Low VRAM` option under the `Settings` tab.
 
 If you do have a beefy GPU:
 * if you have very large voice input files, increase the `Voice Chunk` slider, as the scripts will try and compute a voice's latents in pieces, rather than in one chunk.
@@ -45,9 +57,7 @@ If you do have a beefy GPU:
 * if you're getting this during a `voicefixer` pass, while using CUDA for it is enabled, please try disabling CUDA for Voice Fixer under the `Settings` tab, as it has its own model it loads into VRAM.
 * if you're trying to create an LJSpeech dataset under `Train` > `Prepare Dataset`, please use a smaller Whisper model size under `Settings`.
 
-#### Training
-
-On Pascal-and-before cards, training is pretty much an impossible feat, as consumer cards lack the VRAM necessary to train, or the dedicated silicon to leverage optimizations like BitsAndBytes.
+For training: on Pascal-and-before cards, training is pretty much an impossible feat, as consumer cards lack the VRAM necessary to train, or the dedicated silicon to leverage optimizations like BitsAndBytes.
 
 If you have a Turing (or beyond) card, you may have too large of a batch size, or a mega batch factor. Please try and reduce it before trying again, and ensure TorToiSe is NOT loaded by using the `Do Not Load TTS On Startup` option and restarting the web UI.
 
@@ -102,15 +112,3 @@ Open a command prompt and type `tskill python` to kill all Python processes. Rel
 ### `local_state[k] = v[grad_accum_step] / IndexError: list index out of range`
 
 Your `Gradiant Accumulation Size` is too large for your given `Batch Size`. Please reduce it to, at most, half your batch size, or use the validation button to correct this.
-
-## Reporting Other Errors
-
-I do not have all possible errors documented, so if you encounter one that you can't resolve, please open an Issue with adequate information, including:
-* python version
-* GPU
-* stack trace (or full console output preferred), wrapped in \`\`\`\[trace\]\`\`\` 
-* summary of what you were doing
-
-and I'll try my best to remedy it, even if it's something small like not reading the documentation.
-
-***Please, please, please*** provide either a full stack trace of the error (if running the web UI) or the command prompt output (if running a script). I will not know what's wrong if you only provide the error message itself, as errors are heavily predicated on the full state it happened. Without it, I cannot help you, as I would only be able to make assumptions.
