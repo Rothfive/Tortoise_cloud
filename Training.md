@@ -150,13 +150,23 @@ If everything is done right, you'll see a progress bar and some helpful metrics.
 * `Next milestone in:` reports the next "milestone" for training, and how many more iterations left to reach it.
 	- **!**NOTE**!**: this is pretty inaccurate, as it uses the "instantaneous" rate of change
 
-After every `print rate` iterations, the loss rate will update and get reported back to you. This will update the graph below with the current loss rate. This is useful to see how "ready" your model/finetune is. However, there doesn't seem to be a "one-size-fits-all" value for what loss rate you should aim at. I've had some finetunes benefit a ton more from sub 0.01 loss rates, while others absolutely fried after 0.5 (although, it entirely depends on how low of a learning rate you have, rather than haphazardly quick-training it).
+After every `print rate` iterations, the loss rate will update and get reported back to you. This will update the graph below with the current loss rate. This is useful to see how "ready" your model/finetune is.
 
 If something goes wrong, please consult the output, as, more than likely, you've ran out of memory.
 
 After you're done, the process will close itself, and you are now free to use the newly baked model.
 
 You can then head on over to the `Settings` tab, reload the model listings, and select your newly trained model in the `Autoregressive Model` dropdown.
+
+### Training Graphs
+
+To the right are two graphs to give a raw and rough idea on how well the model is trained.
+
+The first graph will show an aggregate of loss values, and if requested, validation loss rates. These values quantify how much the output from the model deviates from the input sources. There's no one-size-fits-all value on when it's "good enough", as some models work fine with a high enough value, while some other models definitely benefit from really, low values. However, achieving a low loss isn't easy, as it's mostly predicated on an adequate learning rate.
+
+The second graph isn't as important, but it models where the learning rate is at the last reported moment. 
+
+Typically, a "good model" has the text-loss a higher than the mel-loss, and the total-loss a little bit above the mel-loss. If your mel-loss is above the text-loss, don't expect decent output. I believe I haven't had anything decent come out of a model with this behavior.
 
 ### Training Validation
 
