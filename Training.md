@@ -60,7 +60,11 @@ This will generate the YAML necessary to feed into training. For documentation's
 * `Epochs`: how many times you want training to loop through your data. This *should* be dependent on your dataset size, as I've had decent results with 500 epochs for a dataset size of about 60.
 * `Learning Rate`: rate that determines how fast a model will "learn". Higher values train faster, but at the risk of frying the model, overfitting, or other problems. The default is "sane" enough for safety, especially in the scope of retraining, but definitely needs some adjustments. If you want faster training, bump this up to `0.0001` (1e-5), but be wary you may fry your finetune without tighter scheduling.
 * `Text_CE LR Weight`: an experimental setting to govern how much weight to factor in with the provided learning rate. This is ***a highly experimental tunable***, and is only exposed so I don't need to edit it myself when testing it. ***Leave this to the default 0.01 unless you know what you are doing.***
-* `Learning Rate Schedule`: a list of epochs on when to decay the learning rate. You really should leave this as the default.
+* `Learning Rate Scheme`: sets the type of learning rate adjustments, each one exposes its own options:
+	* `Multistep`: MultiStepLR, will decay at fixed intervals to fixed values
+		- `Learning Rate Schedule`: a list of epochs on when to decay the learning rate. You really should leave this as the default.
+    * `Cos. Annealing`: CosineAnnealingLR_Restart, will gradually decay the learning rate over training, and restarts periodically
+    	- `Learning Rate Restarts`: how many times to "restart" the learning rate scheduling, but gradually dampen it
 * `Batch Size`: how large of a batch size for training. Larger batch sizes will result in faster training steps, but at the cost of increased VRAM consumption. This value must exceed the size of your dataset, and *should* be evenly divisible by your dataset size.
 * `Gradient Accumulation Size` (*originally named `mega batch factor`*): At first seemed very confusing, but it's very simple. This will further divide batches into mini-batches, parse them in sequence, but only updates the model after completing all mini-batches. This effectively saves more VRAM by de-facto running at a smaller batch size, but without constantly updating the model, as if running at a larger batch size. This does have some quirks, like crashing when saving at a specific batch size:gradient accumulation ratio, odd pacing of training, etc.
 * `Print Frequency`: how often the trainer should print its training statistics in epochs. Printing takes a little bit of time, but it's a nice way to gauge how a finetune is baking, as it lists your losses and other statistics. This is purely for debugging and babysitting if a model is being trained adequately. The web UI *should* parse the information from stdout and grab the total loss and report it back.
@@ -171,7 +175,7 @@ If you have multiple GPUs, you can easily leverage them by simply specifying how
 However, training large datasets (several thousand+ lines) seems to introduce some instability (at least with ROCm backends). I've had so, so, so, ***so*** many headaches over the course of a week trying to train a large data:
 * initially, I was able to leverage insane batch sizes with proportionally insane gradient accumulation sizes (I think something like bs=1024, ga=16) for a day, and recreating configurations with those values will bring about instability (after one epoch it'll crash Xorg and I can never catch if it's from a system OOM)
 * worker processes count need to be reduced, as it spawns more processes for each GPU, leading to more system RAM pressure
-* using a rather liberal validation dataset size will cause the GPUs to time out, and the watchdog won't catch this until 30 minutes later with the default timeout
+* using a rather liberal validation dataset size will cause the GPUs to crash, or time out, and the watchdog won't catch this until 30 minutes later with the default timeout
 * I believe a finished GPU will block until the other GPU finishes its data, even with GPUs at near-parity, it allegedly offers some delay (efficacy of a rememdy to this is still being tested)
 
 Smaller workloads seem to not have these egregious issues (a few hundred lines), at least in my recent memory.
