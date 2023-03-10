@@ -76,19 +76,22 @@ And you should be done!
 
 #### Note for AMD users
 
-Due to the nature of ROCm, some little problems may occur.
+Due to the nature of ROCm, some little problems may occur. I personally have some stability issues, but they seem to only happen if I haphazardly OOM.
 
-Additionally, training on AMD cards cannot leverage BitsAndBytes optimizations, as those are tied to CUDA runtimes.
+BitsAndBytes support requires some additional work, but most of it is automated with the `setup-rocm-bnb.sh` helper script.
 
 ### Updating
 
 To check for updates, simply run `update.bat` (or `update.sh`). It should pull from the repo, as well as fetch for any new dependencies.
+
+`git pull` *should* also update its submodules, as long as I also have the latest commit pushed to this repo.
 
 ## Notebooks
 
 The repo provides a notebooks to run the software on an instance rather than local hardware.
 
 ### Colab
+
 [Notebook](https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_colab.ipynb): https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_colab.ipynb
 
 For colab use, simply:
