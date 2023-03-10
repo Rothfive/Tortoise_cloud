@@ -40,7 +40,7 @@ Dataset sizes can range from a few sentences, to a large collection of lines. Ho
 
 Simply put your voice sources in its own folder under `./voices/` (as you normally would when using a voice for generating), specify the language to transcribe to (default: English), then click Prepare. Leave the Language field blank to attempt to auto-deduce the language.
 
-This utility will leverage [openai/whisper](https://github.com/openai/whisper/) to transcribe the audio. Then, it'll slice the audio into pieces that the transcription found fit. Afterwards, it'll output this transcript as an LJSpeech-formatted text file: `train.txt`, and that file will also print to the console output on the side.
+This utility will leverage [openai/whisper](https://github.com/openai/whisper/) (or whatever whisper implementation you specified under `Settings`) to transcribe the audio. Then, it'll slice the audio into pieces that the transcription found fit. Afterwards, it'll output this transcript as an LJSpeech-formatted text file: `train.txt`, and that file will also print to the console output on the side.
 
 As whisper uses `fffmpeg` to handle it's audio processing, you must have a copy of `ffmpeg` exposed and accessible through your PATH environment variable. On Linux, this is simply having it installed through your package manager. On Windows, you can just download a copy of `ffmeg.exe` and drop it into the `./bin/` folder.
 
@@ -62,11 +62,11 @@ This will generate the YAML necessary to feed into training. For documentation's
 		- `Learning Rate Schedule`: a list of epochs on when to decay the learning rate. More experiments are needed to determine optimal schedules.
     * `Cos. Annealing`: CosineAnnealingLR_Restart, will gradually decay the learning rate over training, and restarts periodically
     	- `Learning Rate Restarts`: how many times to "restart" the learning rate scheduling, but with a decay. 
-* `Batch Size`: how large of a batch size for training. Larger batch sizes will result in faster training steps, but at the cost of increased VRAM consumption. This value must exceed the size of your dataset, and *should* be evenly divisible by your dataset size.
-* `Gradient Accumulation Size` (*originally named `mega batch factor`*): At first seemed very confusing, but it's very simple. This will further divide batches into mini-batches, parse them in sequence, but only updates the model after completing all mini-batches. This effectively saves more VRAM by de-facto running at a smaller batch size, but without constantly updating the model, as if running at a larger batch size. This does have some quirks, like crashing when saving at a specific batch size:gradient accumulation ratio, odd pacing of training, etc.
-* `Print Frequency`: how often the trainer should print its training statistics in epochs. Printing takes a little bit of time, but it's a nice way to gauge how a finetune is baking, as it lists your losses and other statistics. This is purely for debugging and babysitting if a model is being trained adequately. The web UI *should* parse the information from stdout and grab the total loss and report it back.
+* `Batch Size`: how large of a batch size for training. Larger batch sizes will result in faster training steps, but at the cost of increased VRAM consumption. Smaller batch sizes might not fully saturate your card's throughput, as well as offering *some* theoretical accuracy loss.
+* `Gradient Accumulation Size` (*originally named `mega batch factor`*): This will further divide batches into mini-batches, parse them in sequence, but only updates the model after completing all mini-batches. This effectively saves more VRAM by de-facto running at a smaller batch size, while behaving as if running at a larger batch size. This does have some quirks at insane values, however.
+* `Print Frequency`: how often the trainer should print its training statistics in epochs. Printing takes a little bit of time, but it's a nice way to gauge how a finetune is baking, as it lists your losses and other statistics. This is purely for debugging and babysitting if a model is being trained adequately. This rate affects the resolution of training metrics.
 * `Save Frequency`: how often to save a copy of the model during training in epochs. It seems the training will save a normal copy, an `ema` version of the model, *AND* a backup archive containing both to resume from. If you're training on a Colab with your Drive mounted, these can easily rack up and eat your allotted space. You *can* delete older copies from training, but it's wise not to in case you want to resume from an older state.
-* `Validation Frequency`: if a validation dataset is provided, this governs how frequent the training process will validate against that extra dataset. On completion, it will spit out the losses when and show up in the loss graph.
+* `Validation Frequency`: governs how often to run validation.
 * `Resume State Path`: the last training state saved to resume from. The general path structure is what the placeholder value is. This will resume from whatever iterations it was last at, and iterate from there until the target step count (for example, resuming from iteration 2500, while requesting 5000 iterations, will iterate 2500 more times).
 * `Half-Precision`: setting this will convert the base model to float16 and train at half precision. This *might* be faster, but quality during generation *might* be hindered. I've trained against a small dataset (size 17) of Solid Snake for 3000 epochs, and it *works*, but you *must* enable Half-Precision for generation when using half-precision models. On CUDA systems, this is irrelevant, as everything is secretly trained using integer8 with bitsandbyte's optimizations.
 * `BitsAndBytes`: specifies if you want to train with BitsAndBytes optimizations enabled. Enabling this makes the above setting redundant. You ***should*** really leave this enabled unless you absolutely are sure of what you're doing, as this is crucial to reduce VRAM usage.
@@ -83,22 +83,15 @@ After filling in the values, click `Save Training Configuration`, and it should 
 
 ### Suggested Settings
 
-Getting decent training results is quite the pickle, and it seems my nuggets of wisdom are getting spread over the wiki, so here, I'll (try to) detail my findings with training, now that I'm able to actually test various settings with ease.
-* your target epoch count has no bearing on how something is trained, as it's just a number telling the trainer how long to train
-	- In other words, there's no (perceptable) difference between training for 25 epochs, then 25 epochs, over training for just 50 epochs.
-    - **!**NOTE**!**: there seems to be some quirk with the learning rate scheduler, where it'll take some time for it to "re-adjust" when resuming, so keep in mind your learning rate might be un-decayed for a few iterations when training-then-resuming.
-* (assumption) leave the learning rate where it's at, as training with BitsAndBytes or half-precision will yield worse results the higher the learning rate is.
-* Text CE LR Ratio most definitely should not be touched.
-	- I'm under the impression that it actually wants a high loss ratio to not overfit.
-* With MultiStepLR for a learning rate schedule, I need to do better tests on when the LR should decay.
-* Your batch size and gradient accumulation size greatly determine how much VRAM gets consumed. It is a bit tough to nail right, yet easy to fail and get un-optimal training (desu, it should be ratio instead of factor).
-	- The batch size divided by the gradient accumulation size will determine how much VRAM gets used. For example, similar VRAM is consumed if using a ratio of 64:1, 128:2, 256:4, 512:8, 1024:16.
-- The smaller your print and save frequencies, the more time training will pause to return metrics and dump to disk. I don't think printing very often will harm *too* much, but it pleases my autism to have a tight resolution for my training losses. Naturally, saving often also means more checkpoints on disk.
-- I haven't thoroughly tested half-precision training, as using it was the means of reducing VRAM consumption before BitsAndBytes was integrated.
-	+ in theory, this should be mutually exclusive with BitsAndBytes, as in, you can only enable one or the other.
-- If your system says BitsAndBytes is active, you ***should*** use it. At low learning rates, the drawbacks of possible precision errors isn't exacerbated.
-- The worker size was default to 8 workers. I'm not too sure what increasing this is necessary for (I imagine it was 8 because the original model was trained with 8 GPUs, and it was misnomer-ed as using 8 workers), but leaving this high will definitely creep up on you with increased system RAM usage. 2 is sensible, and I haven't had any performance penalties.
-        
+Getting decent training results is quite the pickle, and it seems my nuggets of wisdom are getting spread over the wiki, so here, I'll (try to) suggest some settings that have got decent results for me.
+
+* dataset size of <= 200:
+	- Epochs: `100` (50 is usually "enough")
+	- Learning Rate: `0.0001`
+	- Learning Rate Scheme: `MultiStepLR`
+	- Learnng Rate Schedule: `[9, 18, 25, 33, 50, 59]` (or `[4, 9, 18, 25, 33, 50, 59]`, if you run into NaN issues)
+    
+I've had three models with astounding success, but one with moderate success.
 
 ### Resuming Training
 
@@ -143,7 +136,6 @@ If everything is done right, you'll see a progress bar and some helpful metrics.
 * `Loss`: the last reported loss value
 * `LR`: the last reported learning rate
 * `Next milestone in:` reports the next "milestone" for training, and how many more iterations left to reach it.
-	- **!**NOTE**!**: this is pretty inaccurate, as it uses the "instantaneous" rate of change
 
 After every `print rate` iterations, the loss rate will update and get reported back to you. This will update the graph below with the current loss rate. This is useful to see how "ready" your model/finetune is.
 
