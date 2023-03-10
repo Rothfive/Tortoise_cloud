@@ -174,6 +174,8 @@ However, these metrics are not re-incorporated into the training, as that's not 
 
 I have yet to fully train a model with validation enabled to see how well it fares, but it should offer a better glimpse of how the model will perform from outside data, rather than recreating its training data.
 
+**!**NOTE**!**: Validation iterations are counted towards normal iterations, for whatever reason.
+
 ### Multi-GPU Training
 
 **!**NOTE**!**: This comes with ***tons*** of headaches on decent-sized datasets. Be warned.
