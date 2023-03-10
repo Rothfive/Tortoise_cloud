@@ -2,6 +2,7 @@
 
 This tab will contain a collection of sub-tabs pertaining to training.
 
+**!**NOTE**!**: this page needs heavy cleanup. Please keep this in mind.
 
 ### Pre-Requisites
 
@@ -16,10 +17,6 @@ Before continuing, please be sure you have an adequate GPU. The bare minimum req
     - Turing (20-series) and beyond: a card with at least 6GiB of VRAM.
 
 Unfortunately, while the official documentation says Kepler-and-beyond cards are able to leverage some of BitsAndBytes' optimizations, in practice (at least on Windows), it seems it's only Turing-and-beyond. Some users have reported issues on Pascal GPUs, while others were able to get training to work with bitsandbytes, albeit with harmed performance.
-
-If you're on Windows and using an installation of this software from before 2023.02.24, and you want to (and can) use BitsAndBytes, please consult https://git.ecker.tech/mrq/ai-voice-cloning/issues/25 for a simple guide to copying the right files.
-
-If you're on Windows using an installation after 2023.02.24, the setup should have already taken care of copying the necessary files to use BitsAndBytes.
 
 To check if it works, you should see a message saying it is using BitsAndBytes optimizations on training startup.
 
