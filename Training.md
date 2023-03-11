@@ -44,6 +44,10 @@ This utility will leverage [openai/whisper](https://github.com/openai/whisper/) 
 
 As whisper uses `fffmpeg` to handle it's audio processing, you must have a copy of `ffmpeg` exposed and accessible through your PATH environment variable. On Linux, this is simply having it installed through your package manager. On Windows, you can just download a copy of `ffmeg.exe` and drop it into the `./bin/` folder.
 
+Some additional validation is applied to the trimmed waveforms, such as:
+* segments that end up being silence are ignored, as the training script will complain.
+* segments that are too short are ignored, as this will cause the training script to crash with a giant stack trace.
+
 Transcription is not perfect, however. Be sure to manually quality check the outputted transcription, and edit any errors it might face. Empty slices may be produced, and will be culled when detected. For things like Japanese, it's expected for things that would be spoken katakana to be coerced into kanji. In addition, when generating a finetuned model trained on Japanese (these may just be problems with my dataset, however):
 * some kanji might get coerced into the wrong pronunciation.
 * small kana like the `っ` of `あたしって` gets coerced as the normal kana.
@@ -64,7 +68,6 @@ This will generate the YAML necessary to feed into training. For documentation's
     	- `Learning Rate Restarts`: how many times to "restart" the learning rate scheduling, but with a decay. 
 * `Batch Size`: how large of a batch size for training. Larger batch sizes will result in faster training steps, but at the cost of increased VRAM consumption. Smaller batch sizes might not fully saturate your card's throughput, as well as offering *some* theoretical accuracy loss.
 * `Gradient Accumulation Size` (*originally named `mega batch factor`*): This will further divide batches into mini-batches, parse them in sequence, but only updates the model after completing all mini-batches. This effectively saves more VRAM by de-facto running at a smaller batch size, while behaving as if running at a larger batch size. This does have some quirks at insane values, however.
-* `Print Frequency`: how often the trainer should print its training statistics in epochs. Printing takes a little bit of time, but it's a nice way to gauge how a finetune is baking, as it lists your losses and other statistics. This is purely for debugging and babysitting if a model is being trained adequately. This rate affects the resolution of training metrics.
 * `Save Frequency`: how often to save a copy of the model during training in epochs. It seems the training will save a normal copy, an `ema` version of the model, *AND* a backup archive containing both to resume from. If you're training on a Colab with your Drive mounted, these can easily rack up and eat your allotted space. You *can* delete older copies from training, but it's wise not to in case you want to resume from an older state.
 * `Validation Frequency`: governs how often to run validation.
 * `Resume State Path`: the last training state saved to resume from. The general path structure is what the placeholder value is. This will resume from whatever iterations it was last at, and iterate from there until the target step count (for example, resuming from iteration 2500, while requesting 5000 iterations, will iterate 2500 more times).
@@ -91,7 +94,7 @@ Getting decent training results is quite the pickle, and it seems my nuggets of 
 	- Learning Rate Scheme: `MultiStepLR`
 	- Learnng Rate Schedule: `[9, 18, 25, 33, 50, 59]` (or `[4, 9, 18, 25, 33, 50, 59]`, if you run into NaN issues)
     
-I've had three models with astounding success, but one with moderate success.
+I've had three models quickly trained with these settings with astounding success, but one with moderate success.
 
 ### Resuming Training
 
@@ -99,9 +102,8 @@ You can easily resume from a previous training state within the web UI as well.
 * select the `Dataset` you want to resume from
 * click `Import Dataset`
 * it'll pull up the last used settings and grab the last saved state to resume from
-	- feel free to adjust any other settings, like increasing the epoch count
-    	+ **!**NOTE**!**: ensure the batch sizes match, as things will get botched if you don't
-	- **!**NOTE**!**: sometimes-but-not-all-the-time, the numbers might be a bit mismatched, due to some rounding errors when converting back from iterations as a unit to epochs as a unit
+	- you're free to adjust settings, like epoch counts, and validation/save frequencies.
+    - **!**NOTE**!**: ensure the batch sizes match, as things will get botched if you don't
 * click `Save Training Setting`
 	- you're free to revalidate your settings, but it shouldn't be necessary if you changed nothing
 And you should be good to resume your training.
@@ -130,14 +132,13 @@ If everything is done right, you'll see a progress bar and some helpful metrics.
 * `current epoch / total epochs`: how far along you are in terms of epochs
 * `current iteration / total iterations`: how far along you are in terms of iterations
 * `current batch / total batches`: how far along you are within an epoch
-* `epoch throughput rate`: the time it took to process the last epoch
 * `iteration throughput rate`: the time it took to process the last iteration
-* `ETA`: estimated time to completion; will use the epoch throughput rate to estimate
+* `ETA`: estimated time to completion; will use the iteration throughput rate to estimate
 * `Loss`: the last reported loss value
 * `LR`: the last reported learning rate
 * `Next milestone in:` reports the next "milestone" for training, and how many more iterations left to reach it.
 
-After every `print rate` iterations, the loss rate will update and get reported back to you. This will update the graph below with the current loss rate. This is useful to see how "ready" your model/finetune is.
+Metrics like loss rates and learning rates get reported back after every iteration. This is useful to see how "ready" your model/finetune is.
 
 If something goes wrong, please consult the output, as, more than likely, you've ran out of memory.
 
@@ -147,6 +148,8 @@ You can then head on over to the `Settings` tab, reload the model listings, and 
 
 ### Training Graphs
 
+#### Brief Explanation
+
 To the right are two graphs to give a raw and rough idea on how well the model is trained.
 
 The first graph will show an aggregate of loss values, and if requested, validation loss rates. These values quantify how much the output from the model deviates from the input sources. There's no one-size-fits-all value on when it's "good enough", as some models work fine with a high enough value, while some other models definitely benefit from really, low values. However, achieving a low loss isn't easy, as it's mostly predicated on an adequate learning rate.
@@ -154,6 +157,22 @@ The first graph will show an aggregate of loss values, and if requested, validat
 The second graph isn't as important, but it models where the learning rate is at the last reported moment. 
 
 Typically, a "good model" has the text-loss a higher than the mel-loss, and the total-loss a little bit above the mel-loss. If your mel-loss is above the text-loss, don't expect decent output. I believe I haven't had anything decent come out of a model with this behavior.
+
+#### Slightly In-Depth
+
+The autoregressive model predicts tokens in as `<speech conditioning>:<text tokens>:<MEL tokens>` string, where:
+* speech conditioning is a vector representing a voice's latents
+* text tokens (I believe) represents phonemes, which can be compared against the CLVP for "most likely candidates"
+* MEL tokens represent the actual speech, which gets later converted to a waveform
+
+Now back to the scope of answering your question. Each curve is responsible for quantifying how accurate the model is.
+* the text loss quantifies how well the predicted text tokens match the source text. This doesn't necessarily need to have too low of a loss. In fact, trainings that have it lower than the mel loss turns out unusuable.
+* the mel loss quantifies how well the predicted speech tokens match the source audio. This definitely seems to benefit from low loss rates.
+* the total loss is a bit irrelevant, and I should probably hide it since it almost always follows the mel loss, due to how the text loss gets weighed.
+
+There's also the validation versions of the text and mel losses, which quantifies the defacto similarity from the generated output to the source output, as the validation dataset serves as outside data (as if you're normally generating something). If there's a large deviation betweent he reported losses and the validation losses, then your model probably has started to overfit for the source material.
+
+Below all of that is the learning rate graph, which helps to show what the current learning rate is at. It's not a huge indicator of how training is, as the learning rate curve is determinative.
 
 ### Training Validation
 
@@ -163,7 +182,7 @@ However, these metrics are not re-incorporated into the training, as that's not 
 
 I have yet to fully train a model with validation enabled to see how well it fares, but it should offer a better glimpse of how the model will perform from outside data, rather than recreating its training data.
 
-**!**NOTE**!**: Validation iterations are counted towards normal iterations, for whatever reason.
+**!**NOTE**!**: Validation iterations sometimes counts towards normal iterations, for whatever reason.
 
 ### Multi-GPU Training
 
