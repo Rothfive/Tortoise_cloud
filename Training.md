@@ -53,6 +53,7 @@ This section will cover how to prepare a dataset for training.
 * `Whisper Backend`: which Whisper backend to use. Currently supporting:
 	- `openai/whisper`: the default, GPU backed implementation.
     - `lightmare/whispercpp`: an additional implementation. Leverages WhisperCPP with python bindings, lighter model sizes, and CPU backed.
+    	+ **!**NOTE**!**: whispercpp is practically Linux only, as it requires a compiling environment that won't kick you in the balls like MSVC would on Windows.
 * `Whisper Model`: whisper model to transcribe against. Larger models boast more accuracy, at the cost of longer processing time, and VRAM comsumption.
 	- **!**NOTE**!**: the large model allegedly has problems with timestamps, moreso than the medium one.
 
@@ -80,15 +81,16 @@ This will generate the YAML necessary to feed into training. For documentation's
 * `Gradient Accumulation Size` (*originally named `mega batch factor`*): This will further divide batches into mini-batches, parse them in sequence, but only updates the model after completing all mini-batches. This effectively saves more VRAM by de-facto running at a smaller batch size, while behaving as if running at a larger batch size. This does have some quirks at insane values, however.
 * `Save Frequency`: how often to save a copy of the model during training in epochs. It seems the training will save a normal copy, an `ema` version of the model, *AND* a backup archive containing both to resume from. If you're training on a Colab with your Drive mounted, these can easily rack up and eat your allotted space. You *can* delete older copies from training, but it's wise not to in case you want to resume from an older state.
 * `Validation Frequency`: governs how often to run validation.
-* `Resume State Path`: the last training state saved to resume from. The general path structure is what the placeholder value is. This will resume from whatever iterations it was last at, and iterate from there until the target step count (for example, resuming from iteration 2500, while requesting 5000 iterations, will iterate 2500 more times).
 * `Half-Precision`: setting this will convert the base model to float16 and train at half precision. This *might* be faster, but quality during generation *might* be hindered. I've trained against a small dataset (size 17) of Solid Snake for 3000 epochs, and it *works*, but you *must* enable Half-Precision for generation when using half-precision models. On CUDA systems, this is irrelevant, as everything is secretly trained using integer8 with bitsandbyte's optimizations.
 * `BitsAndBytes`: specifies if you want to train with BitsAndBytes optimizations enabled. Enabling this makes the above setting redundant. You ***should*** really leave this enabled unless you absolutely are sure of what you're doing, as this is crucial to reduce VRAM usage.
 * `Worker Processes`: tells the training script how many worker processes to spawn. I don't think more workers help training, as they just consume a lot more system RAM, especially when you're using multiple GPUs to train. 2 is sensible, so leave it there.
 * `Source Model`: the source model to finetune against. With it, you can re-finetune already finetuned models (for example, taking a Japanese finetune that can speak Japanese well, but you want to refine it for a specific voice). You *should* leave this as the default autoregressive model unless you are sure of what you're doing. 
+* `Resume State Path`: the last training state saved to resume from. The general path structure is what the placeholder value is. This will resume from whatever iterations it was last at, and iterate from there until the target step count (for example, resuming from iteration 2500, while requesting 5000 iterations, will iterate 2500 more times).
 * `Dataset`: a dataset generated from the `Prepare Dataset` tab.
+
 and, some buttons:
 * `Refresh Dataset List`: updates the dataset list, required when new datasets are added
-* `Import Existing Dataset Settings`: pulls the settings used for a dataset. This will check for an existing training output first, before it checks the actual dataset in the `./training/` folder. This is primarily a shortcut for me when I'm testing settings.
+* `Reuse/Import Existing Dataset Settings`: pulls the settings used for a dataset. This will check for an existing training output first, before it checks the actual dataset in the `./training/` folder. This is primarily a shortcut for me when I'm testing settings.
 * `Validate Training Configuration`: does some sanity checks to make sure that training won't throw an error, and offer suggested settings. You're free to change them after the fact, as validation is not done on save.
 * `Save Training Configuration`: writes the settings to the training YAML, for loading with the training script.
 
@@ -96,15 +98,14 @@ After filling in the values, click `Save Training Configuration`, and it should 
 
 ### Suggested Settings
 
-Getting decent training results is quite the pickle, and it seems my nuggets of wisdom are getting spread over the wiki, so here, I'll (try to) suggest some settings that have got decent results for me.
-
+If you're looking to quickly get something trained in under 100 epochs, these settings work decent enough. I've had three models quickly trained with these settings with astounding success, but one with moderate success.
 * dataset size of <= 200:
 	- Epochs: `100` (50 is usually "enough")
 	- Learning Rate: `0.0001`
 	- Learning Rate Scheme: `MultiStepLR`
-	- Learnng Rate Schedule: `[9, 18, 25, 33, 50, 59]` (or `[4, 9, 18, 25, 33, 50, 59]`, if you run into NaN issues)
+	- Learning Rate Schedule: `[9, 18, 25, 33, 50, 59]` (or `[4, 9, 18, 25, 33, 50, 59]`, if you run into NaN issues)
     
-I've had three models quickly trained with these settings with astounding success, but one with moderate success.
+However, if you want accuracy, I suggest an LR of 1e-5 (0.00001), as longer training at low LRs definitely make the best models.
 
 ### Resuming Training
 
@@ -113,7 +114,7 @@ You can easily resume from a previous training state within the web UI as well.
 * click `Import Dataset`
 * it'll pull up the last used settings and grab the last saved state to resume from
 	- you're free to adjust settings, like epoch counts, and validation/save frequencies.
-    - **!**NOTE**!**: ensure the batch sizes match, as things will get botched if you don't
+    - **!**NOTE**!**: ensure your dataset size and batch sizes match, as things will get botched if you don't
 * click `Save Training Setting`
 	- you're free to revalidate your settings, but it shouldn't be necessary if you changed nothing
 And you should be good to resume your training.
@@ -122,7 +123,7 @@ I've done this plenty of times and haven't had anything nuked or erased. As a sa
 
 In the future, I'll adjust the "resume state" to provide a dropdown instead when selecting a dataset, rather than requiring to import and deduce the most recent state, to make things easier.
 
-**!**NOTE**!**: due to a quirk in the learning rate scheduler, it'll take some time for it to "catch up" to where it should be. Keep this in mind, as your loss rate jump around as the learning rate re-settles and decays.
+**!**NOTE**!**: due to some quirks when resuming, training will act funny for a few epochs, at least when using multi-GPUs. This probably has to do with the optimizer state not quite being recovered when resuming, so the losses will keep oscillating.
 
 ### Changing Base Model
 
@@ -134,7 +135,7 @@ I have not got a chance to test this, as I mistakenly deleted my Japanese model,
 
 After preparing your dataset and configuration file, you are ready to train. Simply select a generated configuration file, click train, then keep an eye on either the console window to the right for output, or console output in your terminal/command prompt.
 
-If you check `Verbose Console Output`, *all* output from the training process gets forwarded to the console window on the right until training starts. This output is buffered, up to the `Console Buffer Size` specified (for example, the last eight lines if 8).
+If you check `Verbose Console Output`, *all* output from the training process gets forwarded to the console window on the right until training starts. This is useful if you access to your terminal output is an inconvenience.
 
 If you bump up the `Keep X Previous States` above 0, it will keep the last X number of saved models and training states, and clean up the rest on training start, and every save.
 
@@ -144,17 +145,17 @@ If everything is done right, you'll see a progress bar and some helpful metrics.
 * `current batch / total batches`: how far along you are within an epoch
 * `iteration throughput rate`: the time it took to process the last iteration
 * `ETA`: estimated time to completion; will use the iteration throughput rate to estimate
+	- **!**NOTE**!**: this is currently broken, I'm not sure what broke it
 * `Loss`: the last reported loss value
 * `LR`: the last reported learning rate
 * `Next milestone in:` reports the next "milestone" for training, and how many more iterations left to reach it.
+	- **!**NOTE**!**: this is currently broken too.
 
 Metrics like loss rates and learning rates get reported back after every iteration. This is useful to see how "ready" your model/finetune is.
 
-If something goes wrong, please consult the output, as, more than likely, you've ran out of memory.
+If something goes wrong, please consult the output, as, more than likely, you've ran out of memory. On systems where VRAM is really tight, it seems pretty easy for it to get upset and OOM.
 
-After you're done, the process will close itself, and you are now free to use the newly baked model.
-
-You can then head on over to the `Settings` tab, reload the model listings, and select your newly trained model in the `Autoregressive Model` dropdown.
+After you're done, the process will close itself, and you are now free to use the newly baked model. You can then head on over to the `Settings` tab, reload the model listings, and select your newly trained model in the `Autoregressive Model` dropdown, or utilize the `auto` feature and it should be deduced when using the voice with the same name as the dataset you trained it on.
 
 ### Training Graphs
 
@@ -190,25 +191,20 @@ In addition, the training script also allows for validating your model against a
 
 However, these metrics are not re-incorporated into the training, as that's not what the validation dataset is for.
 
-I have yet to fully train a model with validation enabled to see how well it fares, but it should offer a better glimpse of how the model will perform from outside data, rather than recreating its training data.
-
 **!**NOTE**!**: Validation iterations sometimes counts towards normal iterations, for whatever reason.
 
 ### Multi-GPU Training
 
-**!**NOTE**!**: This comes with ***tons*** of headaches on decent-sized datasets. Be warned.
+**!**NOTE**!**: This has only been tested on Linux. Windows lacks `nccl` support, but apparently works under WSL2.
 
-**!**NOTE**!**: This is Linux only, simply because I do not have a way to test it on Windows, nor the care to port the shell script to the batch script. This is left as an exercise to the Windows user.
+If you have multiple GPUs, you can easily leverage them by simply specifying how many GPUs you have when generating your training configuration. With it, it'll divide out the workload by splitting the batches to work on among the pool (at least, to my understanding).
 
-If you have multiple GPUs, you can easily leverage them by simply specifying how many GPUs you have in the `Run Training` tab. With it, it'll divide out the workload by splitting the batches to work on among the pool (at least, my understanding).
+**!**NOTE**!**: However, the larger the dataset, the more apparent problems will surface:
+* single-GPU training setups shuffles around the order of the source files which really helps with training. This is disabled when using multiple GPUs, effectively harming accuracy a slightly noticeable amount.
+* optimizer states don't seem to properly get restored when resuming. Losses will oscillate for a while when resuming while training on multiple GPUs.
+* throughput increase is a little finnicky. I found not using gradient accumulation (ga=1) helps increase throughput.
 
-However, training large datasets (several thousand+ lines) seems to introduce some instability (at least with ROCm backends). I've had so, so, so, ***so*** many headaches over the course of a week trying to train a large data:
-* initially, I was able to leverage insane batch sizes with proportionally insane gradient accumulation sizes (I think something like bs=1024, ga=16) for a day, and recreating configurations with those values will bring about instability (after one epoch it'll crash Xorg and I can never catch if it's from a system OOM). This could just be from additional adjustments, however.
-* worker processes count need to be reduced, as it spawns more processes for each GPU, leading to more system RAM pressure. If you have tons and tons of VRAM, you shouldn't worry (something like 1.5X your combined VRAM size should be fine).
-* using a rather conservative (~2%) validation dataset size will cause the GPUs to crash, or time out.
-* there *may* be additional configuration changes needed for it, but some hints just cause more harm than good.
-
-Smaller workloads seem to not have these egregious issues (a few hundred lines), at least in my recent memory.
+I imagine I'm probably neglecting some settings that would alleviate my headaches. Only use multiple GPU training if you're like me and incidentally have matching GPUs.
 
 ### Training Output
 
