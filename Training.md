@@ -58,6 +58,13 @@ This section will cover how to prepare a dataset for training.
 
 This tab will leverage any voice you have under the `./voices/` folder, and transcribes your voice samples using [openai/whisper](https://github.com/openai/whisper) to prepare an LJSpeech-formatted dataset to train against.
 
+It's not required to dedicate a small portion of your dataset for validation purposes, but it's recommended, as it helps remove data that's too small to be useful for. Using a validation dataset will help measure how well the finetune is at synthesizing speech from an input that it has not trained against.
+
+If you're transcribing English text that's already stored as separate sound files (for example, one sentence per file), there isn't much of a concern with utilizing a larger whisper model, as transcription of English is already very decent with even the smaller models.
+
+However, if you're transcribing something non-Latin (like Japanese), or need your source sliced into segments (if you have everything in one large file), then you should consider using a larger model for better timestamping (however, the large model seems to have some problems providing accurate segmentation).
+* **!**NOTE**!**: be very careful with naively trusting how well the audio is segmented. Be sure to manually curate how well 
+
 ## Generate Configuration
 
 This will generate the YAML necessary to feed into training. For documentation's sake, below are details for what each parameter does:
