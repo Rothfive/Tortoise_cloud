@@ -34,26 +34,29 @@ If any of the above is of interest, then you're on the right track.
 
 ## Prepare Dataset
 
-This section will aid in preparing the dataset for finetuning.
+This section will cover how to prepare a dataset for training.
 
-Dataset sizes can range from a few sentences, to a large collection of lines. However, do note that training behavior will vary depending on dataset size.
+* `Dataset Source`: a valid folder under `./voice/`, as if you were using it to generate with.
+* `Language`: language code to transcribe to (leave blank to auto-deduce):
+	- beware, as specifying the wrong language ***will*** let whisper translate it, which is ultimately pointless if you're trying to train aganst.
+* `Validation Text Length Threshold`: transcription text lengths that are below this value are culled and placed in the validation dataset. Set 0 to ignore.
+* `Validation Audio Length Threshold`: audio lengths that are below this value are culled and placed in the validation dataset. Set 0 to ignore.
+* `Skip Already Transcribed`: skip transcribing a file if it's already processed and exists in the `whisper.json` file. Perfect if you're adding new files, and want to skip old files, while allowing you to re-transcribe files.
+* `Slice Segments`: trims your source, based on the timestamps returned by whisper.
+	- **!**NOTE**!**: please, please manually curate your segments. These aren't always accurate; sometimes it will trim too liberally.
+* `Trim Silence`: leverages TorchAudio's VAD to trim out silence, reducing the actual size of the audio files, saving a little more processing time and VRAM consumption when training.
+* `Slice Start Offset`: offsets the beginning timestamp when slicing audio files.
+* `Slice End Offset`: offsets the end timestamp when slicing audio files.
+* `Transcribe and Process`: begin transcription, while also slicing if necessary, and binning lines into either the validation or training datasets.
+* `(Re)Slice Audio`: re-trims your source audios. Perfect if you did not prepare the dataset without slicing, or you modified the timestamps manually, and want to commit your changes.
+* `(Re)Create Datasets`: re-parses the `whisper.json`, creating the files necessary for the training and, if requested, validation datasets.
+* `Whisper Backend`: which Whisper backend to use. Currently supporting:
+	- `openai/whisper`: the default, GPU backed implementation.
+    - `lightmare/whispercpp`: an additional implementation. Leverages WhisperCPP with python bindings, lighter model sizes, and CPU backed.
+* `Whisper Model`: whisper model to transcribe against. Larger models boast more accuracy, at the cost of longer processing time, and VRAM comsumption.
+	- **!**NOTE**!**: the large model allegedly has problems with timestamps, moreso than the medium one.
 
-Simply put your voice sources in its own folder under `./voices/` (as you normally would when using a voice for generating), specify the language to transcribe to (default: English), then click Prepare. Leave the Language field blank to attempt to auto-deduce the language.
-
-This utility will leverage [openai/whisper](https://github.com/openai/whisper/) (or whatever whisper implementation you specified under `Settings`) to transcribe the audio. Then, it'll slice the audio into pieces that the transcription found fit. Afterwards, it'll output this transcript as an LJSpeech-formatted text file: `train.txt`, and that file will also print to the console output on the side.
-
-As whisper uses `fffmpeg` to handle it's audio processing, you must have a copy of `ffmpeg` exposed and accessible through your PATH environment variable. On Linux, this is simply having it installed through your package manager. On Windows, you can just download a copy of `ffmeg.exe` and drop it into the `./bin/` folder.
-
-Some additional validation is applied to the trimmed waveforms, such as:
-* segments that end up being silence are ignored, as the training script will complain.
-* segments that are too short are ignored, as this will cause the training script to crash with a giant stack trace.
-
-Transcription is not perfect, however. Be sure to manually quality check the outputted transcription, and edit any errors it might face. Empty slices may be produced, and will be culled when detected. For things like Japanese, it's expected for things that would be spoken katakana to be coerced into kanji. In addition, when generating a finetuned model trained on Japanese (these may just be problems with my dataset, however):
-* some kanji might get coerced into the wrong pronunciation.
-* small kana like the `っ` of `あたしって` gets coerced as the normal kana.
-* some punctuation like `、` may prematurely terminate a sentence.
-
-You can also designate a portion of your dataset as validation instead of training. Simply enter a value in the `Validation Text Length Cull Size` field, click `Prepare Validation Dataset`, and any transcribed text length under this value will be culled from the main training dataset and allocated to the validation dataset. This not only has the benefit of removing data that's too small to really train for, but also provides an easy way to provide data to validate against that exists outside of the training dataset.
+This tab will leverage any voice you have under the `./voices/` folder, and transcribes your voice samples using [openai/whisper](https://github.com/openai/whisper) to prepare an LJSpeech-formatted dataset to train against.
 
 ## Generate Configuration
 
