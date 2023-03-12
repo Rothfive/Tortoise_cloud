@@ -183,7 +183,7 @@ The autoregressive model predicts tokens in as `<speech conditioning>:<text toke
 * text tokens (I believe) represents phonemes, which can be compared against the CLVP for "most likely candidates"
 * MEL tokens represent the actual speech, which gets later converted to a waveform
 
-Now back to the scope of answering your question. Each curve is responsible for quantifying how accurate the model is.
+Each curve is responsible for quantifying how accurate the model is.
 * the text loss quantifies how well the predicted text tokens match the source text. This doesn't necessarily need to have too low of a loss. In fact, trainings that have it lower than the mel loss turns out unusuable.
 * the mel loss quantifies how well the predicted speech tokens match the source audio. This definitely seems to benefit from low loss rates.
 * the total loss is a bit irrelevant, and I should probably hide it since it almost always follows the mel loss, due to how the text loss gets weighed.
