@@ -107,6 +107,13 @@ If you're looking to quickly get something trained in under 100 epochs, these se
     
 However, if you want accuracy, I suggest an LR of 1e-5 (0.00001), as longer training at low LRs definitely make the best models.
 
+The learning rate is definitely important, as:
+* too large of a learning rate will have it very hard for it to land at the absolute minimum
+* too little of a learning rate and it will either:
+	- take much much longer to reach the absolute minimum, if in the right well
+    - get stuck at the local minimum, and never can find the absolute minimum
+    	+ LR restarts help alleviate this, as it will "shake" things out of any local-but-not-absolute minimums.
+
 ### Resuming Training
 
 You can easily resume from a previous training state within the web UI as well.
