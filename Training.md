@@ -29,6 +29,8 @@ Training/finetuning a model offers a lot of improvements over using the base mod
 	- personally untested, but has been done
 * teaching it an entire new language, like Japanese
 	- personally tested on a dataset size of 14920 audio clips from a gacha I haven't played in ages, Japanese is replicated pretty decently
+* re-finetuning a finetuned model
+	- for example, taking a finetuned language model, and making it specific for a character
 
 If any of the above is of interest, then you're on the right track.
 
@@ -135,9 +137,8 @@ In the future, I'll adjust the "resume state" to provide a dropdown instead when
 
 ### Changing Base Model
 
-In addition to finetuning the base model, you can specify what model you want to finetune, effectively finetuning finetunes. Theoretically, this is useful for finetuning off of language models to fit a specific voice.
+In addition to finetuning the base model, you can specify what model you want to finetune, effectively finetuning finetunes. This is useful for finetuning off of language models to fit a specific voice.
 
-I have not got a chance to test this, as I mistakenly deleted my Japanese model, and I've been having bad luck getting it re-trained.
 
 ## Run Training
 
