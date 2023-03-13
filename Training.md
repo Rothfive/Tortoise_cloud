@@ -118,12 +118,10 @@ After filling in the values, click `Save Training Configuration`, and it should 
 ### Suggested Settings
 
 The following settings are robust enough that I can suggest them, for small or large datasets.
-* Epochs: `100` (50 is usually "enough", large datasets can get 20)
+* Epochs: `50` (increase/decrease as needed, according to how big your dataset is)
 * Learning Rate: `0.0001`
 * Learning Rate Scheme: `MultiStepLR`
-* Learning Rate Schedule: 
-	- small datasets: `[9, 18, 25, 33, 50, 59]`
-	- large datasets: `[2, 4, 9, 18, 25, 33, 50, 59]`
+* Learning Rate Schedule: `[2, 4, 9, 18, 25, 33, 50, 59]`
     
 However, if you want accuracy, I suggest an LR of 1e-5 (0.00001), as longer training at low LRs definitely make the best models.
 
