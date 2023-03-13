@@ -222,7 +222,7 @@ However, these metrics are not re-incorporated into the training, as that's not 
 
 ### Multi-GPU Training
 
-**!**NOTE**!**: This has only been tested on Linux. Windows lacks `nccl` support, but apparently works under WSL2.
+**!**NOTE**!**: This has only been tested on Linux. Windows lacks `nccl` support, but apparently works under WSL2 with the Ubuntu distro.
 
 If you have multiple GPUs, you can easily leverage them by simply specifying how many GPUs you have when generating your training configuration. With it, it'll divide out the workload by splitting the batches to work on among the pool (at least, to my understanding).
 
