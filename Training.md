@@ -73,8 +73,9 @@ However, if you're transcribing something non-Latin (like Japanese), or need you
 This will generate the YAML necessary to feed into training. For documentation's sake, below are details for what each parameter does:
 * `Epochs`: how many times you want training to loop through your data. This *should* be dependent on your dataset size, as I've had decent results with 500 epochs for a dataset size of about 60.
 * `Learning Rate`: rate that determines how fast a model will "learn". Higher values train faster, but at the risk of frying the model, overfitting, or other problems. The default is "sane" enough for safety, especially in the scope of retraining, but definitely needs some adjustments. If you want faster training, bump this up to `0.0001` (1e-5), but be wary you may fry your finetune without tighter scheduling.
-* `Text_CE LR Weight`: an experimental setting to govern how much weight to factor in with the provided learning rate. This is ***a highly experimental tunable***, and is only exposed so I don't need to edit it myself when testing it. ***Leave this to the default 0.01 unless you know what you are doing.***
-	- In theory, for non-Latin languages, you should set this to 1.
+* `Text LR Weight`: governs how much to train the text portion of the model. For English, leave this at `0.01`, as you don't really need to re-teach it English.
+	- For non-English (or specifically, a non-latin-derivative language), set this to 1, as you'll need to effectively "teach" the model a new language.
+* `Mel LR Weight`: governs how much to train the mel spectrogram portion of the model. For most finetune applications (for voices), leave this at `1.0`, as you're effectively re-teaching the model how to sound. For teaching a new language, rather than teaching it a new voice, you *can* set this to `0.01`, as you're not concerned with giving it a new voice, and it should be able to better leverage the existing voices.
 * `Learning Rate Scheme`: sets the type of learning rate adjustments, each one exposes its own options:
 	- `Multistep`: MultiStepLR, will decay at fixed intervals to by a factor (default set to 0.5, so it will halve every milestone).
 		+ `Learning Rate Schedule`: a list of epochs on when to decay the learning rate. More experiments are needed to determine optimal schedules.
@@ -133,8 +134,6 @@ I've done this plenty of times and haven't had anything nuked or erased. As a sa
 
 In the future, I'll adjust the "resume state" to provide a dropdown instead when selecting a dataset, rather than requiring to import and deduce the most recent state, to make things easier.
 
-**!**NOTE**!**: due to some quirks when resuming, training will act funny for a few epochs, at least when using multi-GPUs. This probably has to do with the optimizer state not quite being recovered when resuming, so the losses will keep oscillating.
-
 ### Changing Base Model
 
 In addition to finetuning the base model, you can specify what model you want to finetune, effectively finetuning finetunes. This is useful for finetuning off of language models to fit a specific voice.
@@ -182,13 +181,17 @@ Typically, a "good model" has the text-loss a higher than the mel-loss, and the 
 
 The autoregressive model predicts tokens in as `<speech conditioning>:<text tokens>:<MEL tokens>` string, where:
 * speech conditioning is a vector representing a voice's latents
-* text tokens (I believe) represents phonemes, which can be compared against the CLVP for "most likely candidates"
-* MEL tokens represent the actual speech, which gets later converted to a waveform
+	- I still need to look into specifically how a voice's latents are computed, but I imagine it's by inferencing given a set of mel tokens.
+* text tokens (I believe) represents phonemes, and in turn, a sequence of phonemes represents language.
+	- this governs the language side of the model
+    - later, these tokens are compared against the CLVP to pick the most likely samples given a sequence ot text tokens.
+* mel tokens represent the speech (how phonemes sound)
+	- a sequence of speech gives a voice
+    - these tokens are later processed through to create the raw waveform.
 
 Each curve is responsible for quantifying how accurate the model is.
-* the text loss quantifies how well the predicted text tokens match the source text. This doesn't necessarily need to have too low of a loss. In fact, trainings that have it lower than the mel loss turns out unusuable.
-* the mel loss quantifies how well the predicted speech tokens match the source audio. This definitely seems to benefit from low loss rates.
-* the total loss is a bit irrelevant, and I should probably hide it since it almost always follows the mel loss, due to how the text loss gets weighed.
+* the text loss quantifies how well the predicted text tokens (phonemes) match the source. For finetuning a voice speaking English, this is fairly irrelevant, as the model already speaks English. For finetuning a language, this very much matters.
+* the mel loss quantifies how well the predicted mel tokens (speech) match the source. For finetuning a voice, this very much matters. For finetuning a language, this doesn't matter as much, but for accents and other vocal quirks, it matters to a degree.
 
 There's also the validation versions of the text and mel losses, which quantifies the defacto similarity from the generated output to the source output, as the validation dataset serves as outside data (as if you're normally generating something). If there's a large deviation betweent he reported losses and the validation losses, then your model probably has started to overfit for the source material.
 
@@ -200,20 +203,13 @@ In addition, the training script also allows for validating your model against a
 
 However, these metrics are not re-incorporated into the training, as that's not what the validation dataset is for.
 
-**!**NOTE**!**: Validation iterations sometimes counts towards normal iterations, for whatever reason.
+**!**NOTE**!**: Validation iterations sometimes counts towards normal iterations, for whatever reason. I believe if you set your validation rate to be the same as the iteration rate (for example, every epoch), this behavior occurs.
 
 ### Multi-GPU Training
 
 **!**NOTE**!**: This has only been tested on Linux. Windows lacks `nccl` support, but apparently works under WSL2.
 
 If you have multiple GPUs, you can easily leverage them by simply specifying how many GPUs you have when generating your training configuration. With it, it'll divide out the workload by splitting the batches to work on among the pool (at least, to my understanding).
-
-**!**NOTE**!**: However, the larger the dataset, the more apparent problems will surface:
-* single-GPU training setups shuffles around the order of the source files which really helps with training. This is disabled when using multiple GPUs, effectively harming accuracy a slightly noticeable amount.
-* optimizer states don't seem to properly get restored when resuming. Losses will oscillate for a while when resuming while training on multiple GPUs.
-* throughput increase is a little finnicky. I found not using gradient accumulation (ga=1) helps increase throughput.
-
-I imagine I'm probably neglecting some settings that would alleviate my headaches. Only use multiple GPU training if you're like me and incidentally have matching GPUs.
 
 ### Training Output
 
