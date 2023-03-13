@@ -66,7 +66,22 @@ It's not required to dedicate a small portion of your dataset for validation pur
 If you're transcribing English text that's already stored as separate sound files (for example, one sentence per file), there isn't much of a concern with utilizing a larger whisper model, as transcription of English is already very decent with even the smaller models.
 
 However, if you're transcribing something non-Latin (like Japanese), or need your source sliced into segments (if you have everything in one large file), then you should consider using a larger model for better timestamping (however, the large model seems to have some problems providing accurate segmentation).
-* **!**NOTE**!**: be very careful with naively trusting how well the audio is segmented. Be sure to manually curate how well 
+
+When you're ready to create your training dataset:
+* do not segment by default (you can always force it to by ticking the box, if you have the misfortune of having your voice samples all in one file); leverage the original sound files as much as possible to avoid needlessly segmenting.
+* run transcription, the output from whisper gets dumped to `whisper.json` for later reuse.
+	- double check the transcription here if you plan on consistently regenerating your dataset text files
+* create your dataset file
+	- here, validation is done on each line to ensure it's over 0.6s and under 11.6s and text lengths under 200 characters
+    - if not using segments, and a piece of audio does exceed 11.6s, then segment it.
+    - if a line or segment fails validation, ignore it, it can't be used for either training or validation
+* ***please, please, please*** double check both the transcription and the audio each line references in the dataset, especially if you're using segments. My Japanese dataset seemed to be *okay*, even for the lines that had to be segmented, but I imagine a half-second of inaccuracy is better than the entire end getting silently discarded when DLAS loads it.
+	- if a segment is wrong, you can manually edit it in the whisper.json, then reslice
+    - if something is transcribed weirdly, you can edit it in the whisper.json (both the overall text and its segment), then recreate the dataset.
+
+A lot of it should be fairly hand-held, but the biggest point is to double check the end results (which I didn't do much of).
+
+* **!**NOTE**!**: be very careful with naively trusting how well the audio is segmented. Be sure to manually curate how well they were segmented
 
 ## Generate Configuration
 
@@ -102,12 +117,13 @@ After filling in the values, click `Save Training Configuration`, and it should 
 
 ### Suggested Settings
 
-If you're looking to quickly get something trained in under 100 epochs, these settings work decent enough. I've had three models quickly trained with these settings with astounding success, but one with moderate success.
-* dataset size of <= 200:
-	- Epochs: `100` (50 is usually "enough")
-	- Learning Rate: `0.0001`
-	- Learning Rate Scheme: `MultiStepLR`
-	- Learning Rate Schedule: `[9, 18, 25, 33, 50, 59]` (or `[4, 9, 18, 25, 33, 50, 59]`, if you run into NaN issues)
+The following settings are robust enough that I can suggest them, for small or large datasets.
+* Epochs: `100` (50 is usually "enough", large datasets can get 20)
+* Learning Rate: `0.0001`
+* Learning Rate Scheme: `MultiStepLR`
+* Learning Rate Schedule: 
+	- small datasets: `[9, 18, 25, 33, 50, 59]`
+	- large datasets: `[2, 4, 9, 18, 25, 33, 50, 59]`
     
 However, if you want accuracy, I suggest an LR of 1e-5 (0.00001), as longer training at low LRs definitely make the best models.
 
@@ -138,6 +154,7 @@ In the future, I'll adjust the "resume state" to provide a dropdown instead when
 
 In addition to finetuning the base model, you can specify what model you want to finetune, effectively finetuning finetunes. This is useful for finetuning off of language models to fit a specific voice.
 
+I've had decent success with re-finetuning my finetuned Japanese model.
 
 ## Run Training
 
