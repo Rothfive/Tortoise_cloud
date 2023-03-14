@@ -88,9 +88,11 @@ A lot of it should be fairly hand-held, but the biggest point is to double check
 This will generate the YAML necessary to feed into training. For documentation's sake, below are details for what each parameter does:
 * `Epochs`: how many times you want training to loop through your data. This *should* be dependent on your dataset size, as I've had decent results with 500 epochs for a dataset size of about 60.
 * `Learning Rate`: rate that determines how fast a model will "learn". Higher values train faster, but at the risk of frying the model, overfitting, or other problems. The default is "sane" enough for safety, especially in the scope of retraining, but definitely needs some adjustments. If you want faster training, bump this up to `0.0001` (1e-5), but be wary you may fry your finetune without tighter scheduling.
-* `Text LR Weight`: governs how much to train the text portion of the model. For English, leave this at `0.01`, as you don't really need to re-teach it English.
-	- For non-English (or specifically, a non-latin-derivative language), set this to 1, as you'll need to effectively "teach" the model a new language.
-* `Mel LR Weight`: governs how much to train the mel spectrogram portion of the model. For most finetune applications (for voices), leave this at `1.0`, as you're effectively re-teaching the model how to sound. For teaching a new language, rather than teaching it a new voice, you *can* set this to `0.01`, as you're not concerned with giving it a new voice, and it should be able to better leverage the existing voices.
+* `Text LR Weight`: governs how much to train the text portion (phonemes) of the model.
+	- For English, leave this at `0.01`, as you don't really need to re-teach it English.
+	- For non-English, set this to 1, as you'll need to effectively "teach" the model a new language.
+* `Mel LR Weight`: governs how much to train the mel spectrogram portion (speech) of the model.
+	- For most finetune applications (for voices), leave this at `1.0`, as you're effectively re-teaching the model how to sound.
 * `Learning Rate Scheme`: sets the type of learning rate adjustments, each one exposes its own options:
 	- `Multistep`: MultiStepLR, will decay at fixed intervals to by a factor (default set to 0.5, so it will halve every milestone).
 		+ `Learning Rate Schedule`: a list of epochs on when to decay the learning rate. More experiments are needed to determine optimal schedules.
