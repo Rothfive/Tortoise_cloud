@@ -40,7 +40,7 @@ This section will cover how to prepare a dataset for training.
 
 * `Dataset Source`: a valid folder under `./voice/`, as if you were using it to generate with.
 * `Language`: language code to transcribe to (leave blank to auto-deduce):
-	- beware, as specifying the wrong language ***will*** let whisper translate it, which is ultimately pointless if you're trying to train aganst.
+	- beware, as specifying the wrong language ***will*** let whisper translate it, which is ultimately pointless if you're trying to train against.
 * `Validation Text Length Threshold`: transcription text lengths that are below this value are culled and placed in the validation dataset. Set 0 to ignore.
 * `Validation Audio Length Threshold`: audio lengths that are below this value are culled and placed in the validation dataset. Set 0 to ignore.
 * `Skip Already Transcribed`: skip transcribing a file if it's already processed and exists in the `whisper.json` file. Perfect if you're adding new files, and want to skip old files, while allowing you to re-transcribe files.
@@ -56,7 +56,7 @@ This section will cover how to prepare a dataset for training.
 	- `openai/whisper`: the default, GPU backed implementation.
     - `lightmare/whispercpp`: an additional implementation. Leverages WhisperCPP with python bindings, lighter model sizes, and CPU backed.
     	+ **!**NOTE**!**: whispercpp is practically Linux only, as it requires a compiling environment that won't kick you in the balls like MSVC would on Windows.
-* `Whisper Model`: whisper model to transcribe against. Larger models boast more accuracy, at the cost of longer processing time, and VRAM comsumption.
+* `Whisper Model`: whisper model to transcribe against. Larger models boast more accuracy, at the cost of longer processing time, and VRAM consumption.
 	- **!**NOTE**!**: the large model allegedly has problems with timestamps, moreso than the medium one.
 
 This tab will leverage any voice you have under the `./voices/` folder, and transcribes your voice samples using [openai/whisper](https://github.com/openai/whisper) to prepare an LJSpeech-formatted dataset to train against.
@@ -82,6 +82,14 @@ When you're ready to create your training dataset:
 A lot of it should be fairly hand-held, but the biggest point is to double check the end results (which I didn't do much of).
 
 * **!**NOTE**!**: be very careful with naively trusting how well the audio is segmented. Be sure to manually curate how well they were segmented
+
+### Phonemizer
+
+**!**NOTE**!**: use of [`phonemizer`](https://github.com/bootphon/phonemizer) requires `espeak-ng` installed, or an equivalent backend. Any errors thrown from it are an issue with `phonemizer` itself.
+
+As a shortcut, if you've set your `Tokenizer JSON Path` to the provided `ipa.json`, the text will get outputted as IPA phonemes. This leverages `phonemizer` to convert the transcription text into phonemes (I tried an audio-based one, and it didn't give favorable results).
+
+With this, you can leverage better speech synthesis by training on the actual phonemes, rather than tokens loosely representing phonemes.
 
 ## Generate Configuration
 
@@ -116,6 +124,18 @@ and, some buttons:
 * `Save Training Configuration`: writes the settings to the training YAML, for loading with the training script.
 
 After filling in the values, click `Save Training Configuration`, and it should print a message when it's done.
+
+This will also let you use the selected `Tokenizer JSON` under the `Settings` tab, if you wish to replace it.
+
+### Tokenizer Vocab.
+
+**!**NOTE**!**: training on a different tokenizer vocab. is highly experimental.
+
+The provided tokenizer vocab. is tailored for English, and the base AR model has been heavily trained against it. If you're having problems with pronunciation with a language, you can create a new tokenizer JSON.
+
+Keep in mind, you should replace any tokens *after* `z` (index 39) with whatever additional phonemes you want. You'll also want to provide a good list of merged-text like `th`, as well as provide a definition of the token merge in the `merges` section.
+
+However, you'll need to train with a high text LR ratio, as you're effectively re-defining what a text token means.
 
 ### Suggested Settings
 
@@ -199,7 +219,7 @@ Typically, a "good model" has the text-loss a higher than the mel-loss, and the 
 The autoregressive model predicts tokens in as `<speech conditioning>:<text tokens>:<MEL tokens>` string, where:
 * speech conditioning is a vector representing a voice's latents
 	- I still need to look into specifically how a voice's latents are computed, but I imagine it's by inferencing given a set of mel tokens.
-* text tokens (I believe) represents phonemes, and in turn, a sequence of phonemes represents language.
+* text tokens (I believe) represents virtual-phonemes, and in turn, a sequence of virtual-phonemes represents language.
 	- this governs the language side of the model
     - later, these tokens are compared against the CLVP to pick the most likely samples given a sequence ot text tokens.
 * mel tokens represent the speech (how phonemes sound)
