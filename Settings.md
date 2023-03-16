@@ -16,20 +16,20 @@ Below are settings that override the default launch arguments. Some of these req
 * `Use CUDA for Voice Fixer`: allows voicefixer to use CUDA. Speeds up cleaning the output, but at the cost of more VRAM consumed. Disable if you OOM.
 * `Do Not Load TTS On Startup`: skips loading TorToiSe on initialization, but will get loaded when anything that requires it needs it. This is useful if you're doing non-TTS functions that require VRAM, but you'll OOM while doing it when the model is loaded (for example, training).
 * `Delete Non-Final Output`: if enabled and using multi-line generation, it will delete the individual pieces after combining. If enabled and using Voicefixer, it will remove the un-fixed file. Useful for reducing clutter.
-* `Device Override`: overrides the device name used to pass to PyTorch for hardware acceleration. You can use the accompanied `list_devices.py` script to map valid strings to GPU names. You can also pass `cpu` if you want to fallback to software mode.
 
 * `Sample Batch Size`: sets the batch size when generating autoregressive samples. Bigger batches result in faster compute, at the cost of increased VRAM consumption. Leave to 0 to calculate a "best" fit.
 * `Gradio Concurrency Count`: how many Gradio events the queue can process at once. Leave this over 1 if you want to modify settings in the UI that updates other settings while generating audio clips.
 * `Auto-Calculate Voice Chunk Duration (in seconds)`: for automatically suggesting a voice chunk size, this value will divide the total duration of a voice's input samples. For example, 100 seconds worth of audio with this value as 10 will give 10 chunks. This is to make people stop shitting their pants when they OOM from not adjusting the `Voice Chunk` slider.
 * `Output Volume`: adjusts the volume through amplitude scaling.
-* `Autoregressive Model`: the autoregressive model to use for generating audio output. This will look for models under `./models/finetunes/` and `./training/{voice}-finetune/models/`.
+* `Device Override`: overrides the device name used to pass to PyTorch for hardware acceleration. You can use the accompanied `list_devices.py` script to map valid strings to GPU names. You can also pass `cpu` if you want to fallback to software mode.
+
+* `TTS Backend`: the backend to target for training/inferencing. Defaults to [tortoise](https://git.ecker.tech/mrq/tortoise-tts/).
+* `Autoregressive Model`: the autoregressive model to use for inference. This will look for models under `./models/finetunes/` and `./training/{voice}-finetune/models/`.
 	- select "auto" to automatically select one based on the current voice loaded.
+* `Diffusion Model`: the diffusion model used for inference. For now, this will only provide the default diffusion model, as you can override it manually with an argument flag or editing the `./config/exec.json` file.
 * `Vocoder Model`: selects which vocoder to use. Univnet is the default vocoder, while BigVGAN is a better one.
-* `Whisper Backend`: selects which whisper backend to use when transcribing.
-	- `whisper`: the default whisper implementation
-	- `whispercpp`: leverages [lightmare/whispercpp.py](https://git.ecker.tech/lightmare/whispercpp.py) for transcription and trimming.
-    - `whisperx`: leverages m-bain/whisperX for transcription.
-* `Whisper Model`: the specific model to use for Whisper transcription, when preparing a dataset to finetune with.
+* `Tokenizer JSON Path`: the tokenizer vocab. to use for tokenizing text input for training/inference. Selecting the provided `ipa.json` is experimental, only select it if you know what you are doing.
+
 * `Refresh Model List`: updates the above dropdown with models
 * `Check for Updates`: manually checks for an update for this rep.
 * `(Re)Load TTS`: either initializes or reinitializes TorToiSe. You should not need to use this unless you change some settings, like Low VRAM.
