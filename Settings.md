@@ -18,6 +18,7 @@ Below are settings that override the default launch arguments. Some of these req
 * `Delete Non-Final Output`: if enabled and using multi-line generation, it will delete the individual pieces after combining. If enabled and using Voicefixer, it will remove the un-fixed file. Useful for reducing clutter.
 
 * `Sample Batch Size`: sets the batch size when generating autoregressive samples. Bigger batches result in faster compute, at the cost of increased VRAM consumption. Leave to 0 to calculate a "best" fit.
+* `Unsqueeze Sample Batches`: takes your batches of samples and unsqueezes them after sampling, effectively doing the CLVP pass at a batch size of 1. With it, you can safely increase your sample batch size without fear of OOMing during the CLVP pass.
 * `Gradio Concurrency Count`: how many Gradio events the queue can process at once. Leave this over 1 if you want to modify settings in the UI that updates other settings while generating audio clips.
 * `Auto-Calculate Voice Chunk Duration (in seconds)`: for automatically suggesting a voice chunk size, this value will divide the total duration of a voice's input samples. For example, 100 seconds worth of audio with this value as 10 will give 10 chunks. This is to make people stop shitting their pants when they OOM from not adjusting the `Voice Chunk` slider.
 * `Output Volume`: adjusts the volume through amplitude scaling.
