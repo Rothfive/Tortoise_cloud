@@ -18,7 +18,7 @@ To try and keep the terminology used here (somewhat) consistent and coherent, be
 * `waveform`: the raw audio.
 * `sampling rate`: the bandwidth of a given waveform, represented as twice the frequency of the waveform it represents.
 * `voice latents` / `conditional latents` / `latents`: computated traits of a voice.
-* `autoregressive samples` (`samples` / `tokens`): the initial generation pass to output tokens, and (usually) the most computationally expensive. More samples = better "cloning".
+* `autoregressive samples` (`samples` / `tokens`): the initial generation pass to output tokens, and (usually) the most computationally expensive. More samples = better "cloning", as you're generating more candidates to find the best sample.
 * `CLVP`: Contrastive Language-Voice Pretraining: an analog to CLIP, but for voices. After the autoregressive samples pass, those samples/tokens are compared against the CLVP to find the best candidates.
 * `CVVP`: Contrastive Voice-Voice Pretraining: a (deprecated) model that can be used weighted in junction with the CLVP.
 * `candidates`: results from the comparing against the CLVP/CVVP models. (Assumed to be) ordered from best to worst.
