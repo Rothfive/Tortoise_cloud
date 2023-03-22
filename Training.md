@@ -83,6 +83,12 @@ A lot of it should be fairly hand-held, but the biggest point is to double check
 
 * **!**NOTE**!**: be very careful with naively trusting how well the audio is segmented. Be sure to manually curate how well they were segmented
 
+### WhisperX
+
+The web UI also offers support for using [`m-bain/whisperx`](https://github.com/m-bain/whisperX/) as a transcription backend.
+
+With it, you can leverage its VAD filter, batching, and diarization features for faster and accurate transcriptions. Unfortunately, all of these require a HF token, and accepting agreements (consult the whisperx repo for details on doing that).
+
 ### Phonemizer
 
 **!**NOTE**!**: use of [`phonemizer`](https://github.com/bootphon/phonemizer) requires `espeak-ng` installed, or an equivalent backend. Any errors thrown from it are an issue with `phonemizer` itself.
