@@ -56,10 +56,15 @@ This section will cover how to prepare a dataset for training.
 	- `openai/whisper`: the default, GPU backed implementation.
     - `lightmare/whispercpp`: an additional implementation. Leverages WhisperCPP with python bindings, lighter model sizes, and CPU backed.
     	+ **!**NOTE**!**: whispercpp is practically Linux only, as it requires a compiling environment that won't kick you in the balls like MSVC would on Windows.
+    - `m-bain/whisperx` leverages stuff like VAD and phoneme-level ASR for better transcription.
+    	+ **!**NOTE**!**: better transcription requires an HF-token. If you do not provide one within `./config/exec.json`, you're better off just using another backend.
+    	+ **!**NOTE**!**: this is not installed automatically, as it's a dependency parasite. You're on your own for installing this yourself.
 * `Whisper Model`: whisper model to transcribe against. Larger models boast more accuracy, at the cost of longer processing time, and VRAM consumption.
 	- **!**NOTE**!**: the large model allegedly has problems with timestamps, moreso than the medium one.
 
 This tab will leverage any voice you have under the `./voices/` folder, and transcribes your voice samples using [openai/whisper](https://github.com/openai/whisper) to prepare an LJSpeech-formatted dataset to train against.
+
+Transcribing will also collapse very-short segments with the previous segment after transcription to avoid harsh cuts.
 
 It's not required to dedicate a small portion of your dataset for validation purposes, but it's recommended, as it helps remove data that's too small to be useful for. Using a validation dataset will help measure how well the finetune is at synthesizing speech from an input that it has not trained against.
 
