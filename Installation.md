@@ -86,11 +86,17 @@ To check for updates, simply run `update.bat` (or `update.sh`). It should pull f
 
 `git pull` *should* also update its submodules, as long as I also have the latest commit pushed to this repo.
 
-## Notebooks
+### Alternative Methods
+
+Below are some non-baremetal ways to run the software. These are either provided by other users (Docker) or are actively not supported by be due to how the underlying backend changes (notebooks). I cannot really do anything when it comes to issues popping up from the below methods, as it's beyond my support.
+
+### Docker
+
+### Notebooks
 
 The repo provides a notebooks to run the software on an instance rather than local hardware.
 
-### Colab
+#### Colab
 
 [Notebook](https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_colab.ipynb): https://git.ecker.tech/mrq/ai-voice-cloning/raw/branch/master/notebook_colab.ipynb
 
