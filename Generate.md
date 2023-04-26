@@ -102,9 +102,11 @@ You can set `autoregressive_model` to `auto` alongside a `voice` to automaticall
 
 ### Additional Backends
 
-Some additional backends have not-as-tight integration. You can specify a backend by passing `--tts-backend="backend name"` when launching the starting script.
+Some additional backends have not-as-tight integration. You can specify a backend by passing `--tts-backend="backend name"` when launching the starting script. These backends are ***highly*** experimental, so a lot of features that work for TorToiSe are unavailable for these backends. I tried my best to hide what's not needed, but I'm not perfect.
 
 * `vall-e`: Utilizes [mrq/vall-e](https://git.ecker.tech/mrq/vall-e) as the TTS backend
     + Requires the repo to be cloned to `./modules/vall-e/` and installed using `pip3 install -e ./modules/vall-e/`
 * `bark`: Utilizes [suno-ai/bark/](https://github.com/suno-ai/bark/) as the TTS backend
     + Requires the repo to be cloned to `./modules/bark/` and installed using `pip3 install -e ./modules/bark/`
+    + Requires the target voice to have already been transcribed using the `Training > Prepare Dataset` tab.
+        - This is because creating custom speaker prompts require a transcription of the reference prompt, and what better way to do that than leverage existing transcriptions.
