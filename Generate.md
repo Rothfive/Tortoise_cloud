@@ -99,3 +99,12 @@ You can always refer to a list of valid settings under [`./src/utils.py:155`](ht
 * `autoregressive_model`
 
 You can set `autoregressive_model` to `auto` alongside a `voice` to automatically deduce a model for a given voice.
+
+### Additional Backends
+
+Some additional backends have not-as-tight integration. You can specify a backend by passing `--tts-backend="backend name"` when launching the starting script.
+
+* `vall-e`: Utilizes [mrq/vall-e](https://git.ecker.tech/mrq/vall-e) as the TTS backend
+    + Requires the repo to be cloned to `./modules/vall-e/` and installed using `pip3 install -e ./modules/vall-e/`
+* `bark`: Utilizes [suno-ai/bark/](https://github.com/suno-ai/bark/) as the TTS backend
+    + Requires the repo to be cloned to `./modules/bark/` and installed using `pip3 install -e ./modules/bark/`
