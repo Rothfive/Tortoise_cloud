@@ -22,6 +22,29 @@ Linux:
 * FFMPEG:
 	- only needed when preparing datasets for training/finetuning
 
+#### Bark
+
+Bark is supported, but very experimental. Voice cloning with Bark using user-provided voices is very inconsistent, but the core Bark seems *fine*. To properly install it, ensure you:
+* `git clone https://github.com/suno-ai/bark ./modules/bark/`
+* `pip3 install -e ./modules/bark/`
+* `pip3 install vocos`
+
+And to switch to Bark, start the web UI with "--tts-backend="bark"` (or edit `./config/exec.json`'s `tts-backend` entry to `bark`).
+
+A lot of the web UI's dials and knobs are removed when using Bark to generate voice clips.
+
+#### VALL-E
+
+VALL-E is supported, but *extremely* experimental, using my [fork](https://git.ecker.tech/mrq/vall-e), and its weights with my fork are still being baked.
+
+If you happened to source your own (or when I provide them), ensure you have installed the above package with:
+* `git clone https://git.ecker.tech/mrq/vall-e ./modules/vall-e/`
+* `pip3 install -e ./modules/vall-e/`
+
+And to switch to VALL-E, start the web UI with "--tts-backend="vall-e"` (or edit `./config/exec.json`'s `tts-backend` entry to `vall-e`).
+
+A lot of the web UI's dials and knobs are removed when using VALL-E to generate voice clips.
+
 #### CUDA Version
 
 For NVIDIA cards, the setup script assumes your card support CUDA 11.7. If your GPU does not, simply edit the setup script to the right CUDA version. For example: `pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113` instead.
